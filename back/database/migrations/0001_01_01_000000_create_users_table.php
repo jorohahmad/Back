@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('imageId')->nullable();
             $table->enum('role', ['user', 'admin'])->default('user');
             $table->string('key')->nullable();
+            $table->string('active')->default('0');
             $table->rememberToken();
             $table->timestamps();
         });
