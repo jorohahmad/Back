@@ -17,9 +17,10 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->string('image')->nullable();
-            $table->boolean('is_for_sale')->default(true);
+            $table->string('audio')->nullable();
+            $table->boolean('is_for_sale')->default(false);
             $table->decimal('sale_price',8,2)->nullable();
-            $table->boolean('is_for_rent')->default(true);
+            $table->boolean('is_for_rent')->default(false);
             $table->decimal('rent_price_daily',8,2)->nullable();
             $table->timestamps();
         });

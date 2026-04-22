@@ -11,6 +11,7 @@ class Product extends Model
         'title',
         'description',
         'image',
+        'audio',
         'owner_id',
         'is_for_sale',
         'sale_price',
