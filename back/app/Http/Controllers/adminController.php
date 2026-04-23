@@ -1,0 +1,86 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Mail\AdminMail;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+
+class adminController extends Controller
+{
+    public $user1;
+    function register(Request $request)
+    {
+        $request->validate([
+            'name' => 'required',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|min:8|string|confirmed',
+        ]);
+        $user = new User();
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->role = 'admin';
+        $user->key = random_int(1000, 9999);
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => $user,
+        ], 201);
+    }
+    function login1(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
+        ]);
+        // اذا الايميل والباسورد موجودين في قاعدة البيانات
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            return response()->json([
+                'message' => 'Invalid email or password',
+            ], 401);
+        }
+
+        $user = User::where('email', $request->email)->firstOrFail();
+
+        Mail::to($user->email)->send(new AdminMail($user));
+        return response()->json('Ok', 200);
+    }
+    function login2(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'key'   => 'required'
+        ]);
+        $user = User::where('email', $request->email)->firstOrFail();
+        if ($user->key != $request->key) {
+            $user->update([
+                'key' => (string)random_int(1000, 9999)
+            ]);
+            return response()->json([
+                'message' => 'Invalid key',
+            ], 401);
+        }
+        $user->update([
+            'key' => (string)random_int(1000, 9999)
+        ]);
+
+        $token = $user->createToken('auth_token')->plainTextToken;
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
+    }
+    function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+            'message' => 'Logout successful',
+        ], 200);
+    }
+}
