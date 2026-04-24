@@ -60,6 +60,8 @@ class ProductController extends Controller
                 'serial_number' => $p->id
             ]);
         }
+        $product['image']=url("imageInst/".$product->image);
+        $product['audio']=url("audioInst/".$product->audio);
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
