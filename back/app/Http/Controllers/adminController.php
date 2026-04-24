@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Mail;
 
 class adminController extends Controller
 {
-    public $user1;
     function register(Request $request)
     {
         $request->validate([
@@ -32,6 +31,8 @@ class adminController extends Controller
             'user' => $user,
         ], 201);
     }
+
+    //login 1 to email and password 
     function login1(Request $request)
     {
         $request->validate([
@@ -46,10 +47,14 @@ class adminController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-
+        if ($user->role != 'admin'){
+        return response()->json('You are not admin', 401);
+        }
         Mail::to($user->email)->send(new AdminMail($user));
         return response()->json('Ok', 200);
     }
+
+    //login 2 to confirmation admin email 
     function login2(Request $request)
     {
         $request->validate([
@@ -57,7 +62,7 @@ class adminController extends Controller
             'key'   => 'required'
         ]);
         $user = User::where('email', $request->email)->firstOrFail();
-        if ($user->key != $request->key) {
+        if ($user->key != $request->key ) {
             $user->update([
                 'key' => (string)random_int(1000, 9999)
             ]);
@@ -76,6 +81,8 @@ class adminController extends Controller
             'token' => $token,
         ], 200);
     }
+
+    // logout
     function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -83,4 +90,56 @@ class adminController extends Controller
             'message' => 'Logout successful',
         ], 200);
     }
+
+//________________________________________________________________________
+
+    // all users in application
+    public function indexUsers()
+    {
+        $allUsers  = User::where('role', 'user')->get();
+        return response()->json($allUsers, 200);
+    }
+
+    // just pending users
+    public function indexPendingUser()
+    {
+        $pendingUsers  = User::where('active', '0')->get();
+        return response()->json($pendingUsers, 200);
+    }
+
+    //  just approved users
+    public function indexApprovedUser()
+    {
+        $approvedUsers  = User::where('active', '1')->get();
+        return response()->json($approvedUsers, 200);
+    }
+    // just rejected users
+    public function indexRejectedUser()
+    {
+        $rejectedUsers  = User::where('active', '2')->get();
+        return response()->json($rejectedUsers, 200);
+    }
+
+    //update active to approved mean '1'
+    public function approveUser(Request $request)
+    {
+        $request->validate([
+            'active' => 'required|in:0',
+        ]);
+
+        $user = User::findOrFail($request->id);
+
+        // active => 1
+        $user->active = '1';
+        $user->save();
+        return response()->json('Approve User' , 200);
+    }
+
+    //update active to rejected mean '2'
+    public function RejectUser(Request $request, $id)
+    {
+        
+    }
+    
+
 }
