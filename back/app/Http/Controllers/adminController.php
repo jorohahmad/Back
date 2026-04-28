@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\AdminMail;
+use App\Mail\approvedUserMail;
+use App\Mail\rejectedUserMail;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,8 +49,8 @@ class adminController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        if ($user->role != 'admin'){
-        return response()->json('You are not admin', 401);
+        if ($user->role != 'admin') {
+            return response()->json('You are not admin', 401);
         }
         Mail::to($user->email)->send(new AdminMail($user));
         return response()->json('Ok', 200);
@@ -62,7 +64,7 @@ class adminController extends Controller
             'key'   => 'required'
         ]);
         $user = User::where('email', $request->email)->firstOrFail();
-        if ($user->key != $request->key ) {
+        if ($user->key != $request->key) {
             $user->update([
                 'key' => (string)random_int(1000, 9999)
             ]);
@@ -91,7 +93,7 @@ class adminController extends Controller
         ], 200);
     }
 
-//________________________________________________________________________
+    //________________________________________________________________________
 
     // all users in application
     public function indexUsers()
@@ -116,30 +118,31 @@ class adminController extends Controller
     // just rejected users
     public function indexRejectedUser()
     {
-        $rejectedUsers  = User::where('active', '2')->get();
+        $rejectedUsers  = User::onlyTrashed()->get();
+
         return response()->json($rejectedUsers, 200);
     }
 
     //update active to approved mean '1'
     public function approveUser(Request $request)
     {
-        $request->validate([
-            'active' => 'required|in:0',
-        ]);
-
         $user = User::findOrFail($request->id);
 
         // active => 1
         $user->active = '1';
         $user->save();
-        return response()->json('Approve User' , 200);
+        Mail::to($user->email)->send(new approvedUserMail($user));
+        return response()->json('Approve User', 200);
     }
 
     //update active to rejected mean '2'
-    public function RejectUser(Request $request, $id)
+    public function RejectUser(Request $request)
     {
-        
-    }
-    
+        $user = User::findOrFail($request->id);
 
+        // Soft delete
+        $user->delete();
+        Mail::to($user->email)->send(new rejectedUserMail($user));
+        return response()->json('Reject User', 200);
+    }
 }
