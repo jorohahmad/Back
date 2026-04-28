@@ -13,7 +13,7 @@ Route::post('register',[UserController::class,'register']);
 Route::post('login',[UserController::class,'login']);
 Route::post('logout',[UserController::class,'logout'])->middleware('auth:sanctum');
 
-
+//
 Route::post('create-product',[ProductController::class,'create'])->middleware('auth:sanctum');
 Route::get('products-for-sale',[ProductController::class,'indexForSale'])->middleware('auth:sanctum');
 Route::get('products-for-rent',[ProductController::class,'indexForRent'])->middleware('auth:sanctum');

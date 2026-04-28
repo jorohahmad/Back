@@ -2,14 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\RegisterMail;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
-    function register(Request $request){
+    function register(Request $request)
+    {
         $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users,email',
@@ -24,27 +28,35 @@ class UserController extends Controller
         // $path1=storage_path('app/public/'.$personalImageName);
         // file_put_contents($path1,$personalImage);
         // $validated['personalImage'] = str_replace('M/', '', $personalImageName);
-        if($request->has('imagePersonal')){
-            $image=$request->imagePersonal;
-            $extension=$image->getClientOriginalExtension();
-            $fileName=time().rand(1,1000).'.'.$extension;
-            $image->move(public_path("imagePersonal"),$fileName);
-            $user->imagePersonal=$fileName;
+        if ($request->has('imagePersonal')) {
+            $image = $request->imagePersonal;
+            $extension = $image->getClientOriginalExtension();
+            $fileName = time() . rand(1, 1000) . '.' . $extension;
+            $image->move(public_path("imagePersonal"), $fileName);
+            $user->imagePersonal = $fileName;
         }
-        if($request->has('imageId')){
-            $image=$request->imageId;
-            $extension=$image->getClientOriginalExtension();
-            $fileName=time().rand(1,1000).'.'.$extension;
-            $image->move(public_path("imageId"),$fileName);
-            $user->imageId=$fileName;
+        if ($request->has('imageId')) {
+            $image = $request->imageId;
+            $extension = $image->getClientOriginalExtension();
+            $fileName = time() . rand(1, 1000) . '.' . $extension;
+            $image->move(public_path("imageId"), $fileName);
+            $user->imageId = $fileName;
         }
+
         $user->save();
+        // try {
 
-    return response()->json([
-        'message' => 'User registered successfully',
-        'user' => $user,
-    ], 201);
-
+            Mail::to($user->email)->send(new RegisterMail($user->name));
+        // } catch (Exception $ex) {
+        //     return response()->json([
+        //         'message' => ' failed to send email.',
+        //         'error' => $ex->getMessage(),
+        //     ], 200);
+        // }
+        return response()->json([
+            'message' => 'User registered successfully',
+            'user' => $user,
+        ], 201);
     }
     function login(Request $request)
     {
@@ -53,34 +65,33 @@ class UserController extends Controller
             'password' => 'required|string',
         ]);
         // اذا الايميل والباسورد موجودين في قاعدة البيانات
-        if(!Auth::attempt($request->only('email','password'))){
+        if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Invalid email or password',
             ], 401);
         }
-        
-        $user=User::where('email',$request->email)->firstOrFail();
+
+        $user = User::where('email', $request->email)->firstOrFail();
         //اذا  الادمن وافق او لا
-        if($user->active=="0"){
+        if ($user->active == "0") {
             return response()->json([
                 'message' => 'Your account is not active yet. Please wait for admin approval.',
             ], 403);
         }
-        $user['imagePersonal']=url("imagePersonal/".$user->imagePersonal);
-        $user['imageId']=url("imageId/".$user->imageId);
-        $token=$user->createToken('auth_token')->plainTextToken;
+        $user['imagePersonal'] = url("imagePersonal/" . $user->imagePersonal);
+        $user['imageId'] = url("imageId/" . $user->imageId);
+        $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'message' => 'Login successful',
             'user' => $user,
             'token' => $token,
         ], 200);
     }
-    function logout(Request $request){
+    function logout(Request $request)
+    {
         $request->user()->currentAccessToken()->delete();
         return response()->json([
             'message' => 'Logout successful',
         ], 200);
     }
-
 }
-
