@@ -16,11 +16,22 @@ class Rental extends Model
         'total_price',
         'status',
     ];
-    public function renter() { return $this->belongsTo(User::class, 'renter_id'); }
-    public function lessor() { return $this->belongsTo(User::class, 'lessor_id'); }
-    
+    public function renter()
+    {
+        return $this->belongsTo(User::class, 'renter_id');
+    }
+    public function lessor()
+    {
+        return $this->belongsTo(User::class, 'lessor_id');
+    }
+
     public function item()
     {
         return $this->belongsTo(ProductItem::class, 'product_item_id');
+    }
+    // داخل كلاس Rental
+    public function platformEarning()
+    {
+        return $this->hasOne(PlatformEarning::class, 'rental_id');
     }
 }

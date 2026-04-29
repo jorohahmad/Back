@@ -26,6 +26,6 @@ class Product extends Model
     // الحصول على العناصر المرتبطة بالآلة
     public function items()
     {
-        return $this->hasMany(ProductItem::class, 'product_id');
+        return $this->hasMany(ProductItem::class,'product_id');
     }
 }

@@ -23,41 +23,32 @@ class UserController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = Hash::make($request->password);
-        //   $personalImage=base64_decode($request->personalImage);
-        // $personalImageName='M/'.time().'.jpg';
-        // $path1=storage_path('app/public/'.$personalImageName);
-        // file_put_contents($path1,$personalImage);
-        // $validated['personalImage'] = str_replace('M/', '', $personalImageName);
+
         if ($request->has('imagePersonal')) {
-            $image = $request->imagePersonal;
-            $extension = $image->getClientOriginalExtension();
-            $fileName = time() . rand(1, 1000) . '.' . $extension;
-            $image->move(public_path("imagePersonal"), $fileName);
-            $user->imagePersonal = $fileName;
+            $s = saveFile($request->file('imagePersonal'), 'imagePersonal');
+            $user->imagePersonal = $s;
         }
         if ($request->has('imageId')) {
-            $image = $request->imageId;
-            $extension = $image->getClientOriginalExtension();
-            $fileName = time() . rand(1, 1000) . '.' . $extension;
-            $image->move(public_path("imageId"), $fileName);
-            $user->imageId = $fileName;
+            $s = saveFile($request->file('imageId'), 'imageId');
+            $user->imageId = $s;
         }
 
         $user->save();
-        // try {
-
+        try {
             Mail::to($user->email)->send(new RegisterMail($user->name));
-        // } catch (Exception $ex) {
-        //     return response()->json([
-        //         'message' => ' failed to send email.',
-        //         'error' => $ex->getMessage(),
-        //     ], 200);
-        // }
+        } catch (Exception $ex) {
+            return response()->json([
+                'message' => ' failed to send email.',
+                'error' => $ex->getMessage(),
+            ], 200);
+        }
         return response()->json([
             'message' => 'User registered successfully',
+            'image' => asset('storage/' . $user->imagePersonal),
             'user' => $user,
         ], 201);
     }
+    /////////////////////////////////////// login and logout
     function login(Request $request)
     {
         $request->validate([
@@ -78,8 +69,8 @@ class UserController extends Controller
                 'message' => 'Your account is not active yet. Please wait for admin approval.',
             ], 403);
         }
-        $user['imagePersonal'] = url("imagePersonal/" . $user->imagePersonal);
-        $user['imageId'] = url("imageId/" . $user->imageId);
+        $user['imagePersonal'] = asset('storage/' . $user->imagePersonal);
+        $user['imageId'] = asset('storage/' . $user->imageId);
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
             'message' => 'Login successful',
