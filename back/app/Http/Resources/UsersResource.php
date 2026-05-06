@@ -21,4 +21,5 @@ class UsersResource extends JsonResource
             'image'=>asset('storage/' . $this->imagePersonal)
         ];
     }
+    
 }
