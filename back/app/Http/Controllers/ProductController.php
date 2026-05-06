@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ProductRentalResource;
+use App\Http\Resources\ProductSaleResource;
 use App\Models\Product;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -69,11 +72,19 @@ class ProductController extends Controller
     public function indexForSale()
     {
         $products = Product::with('items')->where('is_for_sale', true)->get();
-        return response()->json($products);
+        foreach ($products as $product) {
+            $name=User::find($product->owner_id)->name;
+            $product->owner_name=$name;
+        }
+        return ProductSaleResource::collection($products);
     }
     public function indexForRent()
     {
-        $products = Product::with('items')->with('owner')->where('is_for_rent', true)->get()->pluck('items')->flatten();
-        return response()->json($products);
+        $products = Product::with('items')->where('is_for_rent', true)->get();
+        foreach ($products as $product) {
+            $name=User::find($product->owner_id)->name;
+            $product->owner_name=$name;
+        }
+        return ProductRentalResource::collection($products);
     }
 }
