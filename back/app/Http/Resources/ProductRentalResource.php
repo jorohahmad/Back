@@ -15,7 +15,7 @@ class ProductRentalResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-             'id' => $this->id,
+            'id' => $this->id,
             'owner_name' => $this->owner ? $this->owner->name : null,
             'owner_id' => $this->owner_id,
             'title' => $this->title,
