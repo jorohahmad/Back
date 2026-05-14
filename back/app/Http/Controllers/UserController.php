@@ -33,7 +33,7 @@ class UserController extends Controller
             $user->imageId = $s;
         }
 
-        $user->save();
+        
         try {
             Mail::to($user->email)->send(new RegisterMail($user->name));
         } catch (Exception $ex) {
@@ -42,6 +42,7 @@ class UserController extends Controller
                 'error' => $ex->getMessage(),
             ], 200);
         }
+        $user->save();
         return response()->json([
             'message' => 'User registered successfully',
             'image' => asset('storage/' . $user->imagePersonal),

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\LessonController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -17,6 +18,9 @@ Route::post('logout',[UserController::class,'logout'])->middleware('auth:sanctum
 Route::post('create-product',[ProductController::class,'create'])->middleware('auth:sanctum');
 Route::get('products-for-sale',[ProductController::class,'indexForSale'])->middleware('auth:sanctum');
 Route::get('products-for-rent',[ProductController::class,'indexForRent'])->middleware('auth:sanctum');
+
+Route::get('get-lessons',[LessonController::class,'index']);
+Route::post('add-lesson',[LessonController::class,'store']);
 
 Route::post('admin/register' , [adminController::class,'register']);
 Route::post('admin/login1' , [adminController::class,'login1']);

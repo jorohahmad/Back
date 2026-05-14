@@ -55,7 +55,7 @@ class ProductController extends Controller
             $p = $product->items()->create([
                 'serial_number' => rand(1, 999999),
                 'condition' => $request->condition,
-                'status' =>'active',
+                'status' => 'active',
             ]);
 
             $p->update([
@@ -65,26 +65,20 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
-            'items' => $product->items,
         ], 201);
     }
 
     public function indexForSale()
     {
-        $products = Product::with('items')->where('is_for_sale', true)->get();
-        foreach ($products as $product) {
-            $name=User::find($product->owner_id)->name;
-            $product->owner_name=$name;
-        }
+
+        $products = Product::with(['items', 'owner'])
+            ->where('is_for_sale', true)
+            ->get();
         return ProductSaleResource::collection($products);
     }
     public function indexForRent()
     {
-        $products = Product::with('items')->where('is_for_rent', true)->get();
-        foreach ($products as $product) {
-            $name=User::find($product->owner_id)->name;
-            $product->owner_name=$name;
-        }
+        $products = Product::with(['items', 'owner'])->where('is_for_rent', true)->get();
         return ProductRentalResource::collection($products);
     }
 }
