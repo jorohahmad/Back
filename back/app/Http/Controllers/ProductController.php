@@ -44,6 +44,10 @@ class ProductController extends Controller
             $fileName = saveFile($request->file('audio'), 'audioInst');
             $product->audio = $fileName;
         }
+        if ($request->hasFile('video')) {
+            $videoPath = saveFile($request->file('video'), 'vedioInst');
+            $product->video = $videoPath;
+        }
 
         $product->is_for_sale = $request->is_for_sale ?? false;
         $product->sale_price = $request->sale_price;
