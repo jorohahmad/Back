@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Auth;
 
 class ProductRentalResource extends JsonResource
 {
@@ -26,8 +27,10 @@ class ProductRentalResource extends JsonResource
             ->values()
             ->toArray(),
             'audio' => $this->audio ? asset('storage/' . $this->audio) : null,
+            'video' => $this->video ? asset('storage/' . $this->video) : null,
             'is_for_rent' => $this->is_for_rent,
             'rent_price_daily' => $this->rent_price_daily,
+            'is_favorite' => $this->favorites()->where('user_id', Auth()->user()->id)->exists(),
             'items_count' => $this->items()->count(),
         ];
     }

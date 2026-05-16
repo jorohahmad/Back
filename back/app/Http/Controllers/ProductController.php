@@ -20,27 +20,29 @@ class ProductController extends Controller
             'image2' => 'nullable|image|max:2048',
             'image3' => 'nullable|image|max:2048',
             'audio' => 'nullable|max:10240',
+            'video' => 'nullable|max:51200',
             'is_for_sale' => 'boolean',
             'sale_price' => 'required_if:is_for_sale,1|numeric|min:0',
             'is_for_rent' => 'boolean',
             'rent_price_daily' => 'required_if:is_for_rent,1|numeric|min:0',
             'count' => 'required|integer|min:1',
             'condition' => 'required|in:new,used',
+            'announcement' => 'boolean',
+            'repricing' => 'boolean',
         ]);
         // create product
         $product = new Product();
         $product->owner_id = Auth::user()->id;
         $product->title = $request->title;
         $product->description = $request->description;
-        if ($request->has('image1')) {
+        
             for ($i = 1; $i <= 3; $i++) {
                 if ($request->hasFile('image' . $i)) {
                     $s = saveFile($request->file('image' . $i), 'imageInst');
                     $product->{'image' . $i} = $s;
                 }
             }
-        }
-        if ($request->has('audio')) {
+        if ($request->hasFile('audio')) {
             $fileName = saveFile($request->file('audio'), 'audioInst');
             $product->audio = $fileName;
         }

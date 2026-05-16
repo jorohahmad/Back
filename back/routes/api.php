@@ -20,9 +20,13 @@ Route::post('create-product',[ProductController::class,'create'])->middleware('a
 Route::get('products-for-sale',[ProductController::class,'indexForSale'])->middleware('auth:sanctum');
 Route::get('products-for-rent',[ProductController::class,'indexForRent'])->middleware('auth:sanctum');
 
-Route::get('get-lessons',[LessonController::class,'index']);
-Route::post('add-lesson',[LessonController::class,'store']);
+Route::get('get-lessons',[LessonController::class,'index'])->middleware('auth:sanctum');
+Route::post('add-lesson',[LessonController::class,'store'])->middleware('auth:sanctum');
 
+Route::post('favorite', [UserController::class, 'toggleFavorite'])->middleware('auth:sanctum');
+Route::get('favorites', [UserController::class, 'getFavorites'])->middleware('auth:sanctum');
+
+//
 Route::post('admin/register' , [adminController::class,'register']);
 Route::post('admin/login1' , [adminController::class,'login1']);
 Route::post('admin/login2' , [adminController::class,'login2']);

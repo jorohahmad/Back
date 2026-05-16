@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\RegisterMail;
+use App\Models\Product;
 use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class UserController extends Controller
             $user->imageId = $s;
         }
 
-        
+
         try {
             Mail::to($user->email)->send(new RegisterMail($user->name));
         } catch (Exception $ex) {
@@ -84,6 +85,26 @@ class UserController extends Controller
         $request->user()->currentAccessToken()->delete();
         return response()->json([
             'message' => 'Logout successful',
+        ], 200);
+    }
+    ///////////////////////favorites///////////////////////
+    public function toggleFavorite(Request $request)
+    {
+        $user = Auth::user();
+        $result = $user->favorites()->toggle($request->productId);
+        $isFavorited = count($result['attached']) > 0;
+        return response()->json([
+            'message' => $isFavorited ? 'تمت الإضافة إلى المفضلة' : 'تم الإزالة من المفضلة',
+            'is_favorited' => $isFavorited
+        ], 200);
+    }
+
+    public function getFavorites()
+    {
+        $user = Auth::user();
+        $favorites = $user->favorites()->with('owner')->get();
+        return response()->json([
+            'favorites' => $favorites
         ], 200);
     }
 }
