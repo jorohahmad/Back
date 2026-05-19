@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\FavoriteResource;
 use App\Mail\RegisterMail;
 use App\Models\Product;
 use App\Models\User;
@@ -102,9 +103,7 @@ class UserController extends Controller
     public function getFavorites()
     {
         $user = Auth::user();
-        $favorites = $user->favorites()->with('owner')->get();
-        return response()->json([
-            'favorites' => $favorites
-        ], 200);
+        $favorites = $user->favorites()->get();
+        return FavoriteResource::collection($favorites);
     }
 }
