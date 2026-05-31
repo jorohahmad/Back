@@ -33,6 +33,7 @@ class ProductSaleResource extends JsonResource
             'sale_price' => $this->sale_price,
             'is_favorite' => $this->favorites()->where('user_id', Auth()->user()->id)->exists(),
             'items_count' => $this->items()->count(),
+            'serial_number' => $this->items()->where('status', 'active')->pluck('id')->toArray(),
         ];
     }
 }

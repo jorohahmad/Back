@@ -31,7 +31,8 @@ class ProductRentalResource extends JsonResource
             'is_for_rent' => $this->is_for_rent,
             'rent_price_daily' => $this->rent_price_daily,
             'is_favorite' => $this->favorites()->where('user_id', Auth()->user()->id)->exists(),
-            'items_count' => $this->items()->count(),
+            'items_count' => $this->items()->where('status', 'active')->count(),
+            'serial_number' => $this->items()->where('status', 'active')->pluck('id')->toArray(),
         ];
     }
 }

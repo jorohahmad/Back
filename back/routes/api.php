@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\CartController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProductController;
@@ -45,3 +46,5 @@ Route::post('notice/update' , [NoticeController::class, 'update'])->middleware('
 Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middleware('auth:sanctum','admin');
 Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
 Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
+
+Route::post('addToCart',[CartController::class,'addToCart'])->middleware('auth:sanctum');

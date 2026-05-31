@@ -27,6 +27,7 @@ return new class extends Migration
             $table->decimal('rent_price_daily',8,2)->nullable();
             $table->boolean('announcement')->default(false);
             $table->boolean('repricing')->default(false);
+            $table->integer('stock')->default(0);
             $table->timestamps();
         });
     }

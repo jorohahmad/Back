@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->cascadeOnDelete();
+            $table->foreignId('product_item_id')->nullable()->constrained('product_items')->cascadeOnDelete();
             $table->enum('type', ['sale', 'rent']);
             $table->enum('status', ['active', 'completed'])->default('active');
             $table->integer('quantity')->default(1);
