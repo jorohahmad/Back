@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductItem;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Collection;
 
 class CartService
 {
@@ -23,7 +24,7 @@ class CartService
     // 1. معالجة طلبات الشراء (Sale)
     // ==========================================
 
-    private function addSaleToCart($userId, $product, $quantity)
+    private function addSaleToCart(int $userId, Product $product, int $quantity)
     {
         if (!$product->is_for_sale) {
             throw new Exception("هذا المنتج غير متاح للبيع.");
@@ -59,7 +60,7 @@ class CartService
     // ==========================================
     // 2. معالجة طلبات الإيجار (Rent)
     // ==========================================
-    private function addRentToCart($userId, $product, $quantity, $startDate, $endDate)
+    private function addRentToCart(int $userId, Product $product, int $quantity, string $startDate, string $endDate)
     {
         if (!$product->is_for_rent) {
             throw new Exception("هذا المنتج غير متاح للإيجار.");
@@ -100,5 +101,70 @@ class CartService
             ];
         }
         Cart::insert($cartData);
+    }
+
+
+    // view cart
+    public function getFormattedCart(int $userId): array
+    {
+        $cartItems = Cart::with('product')->where('user_id', $userId)->get();
+
+        if ($cartItems->isEmpty()) {
+            return [
+                'items'       => [],
+                'grand_total' => 0
+            ];
+        }
+
+        $groupedCart = $this->groupAndFormatCartItems($cartItems);
+
+        return [
+            'items'       => $groupedCart,
+            'grand_total' => $groupedCart->sum('total_price'),
+        ];
+    }
+
+    private function groupAndFormatCartItems(Collection $cartItems)
+    {
+        return $cartItems->groupBy(function ($item) {
+            return $this->generateGroupKey($item);
+        })->map(function ($group) {
+            return $this->formatSingleGroup($group);
+        })->values();
+    }
+
+    private function generateGroupKey($item): string
+    {
+        return $item->type === 'sale'
+            ? "sale_{$item->product_id}"
+            : "rent_{$item->product_id}_{$item->rent_start_date}_{$item->rent_end_date}";
+    }
+
+    private function formatSingleGroup(Collection $group): array
+    {
+        $firstItem     = $group->first();
+        $totalQuantity = $group->sum('quantity');
+
+        return [
+            'cart_ids'        => $group->pluck('id')->toArray(),
+            'product_id'      => $firstItem->product_id,
+            'product_name'    => $firstItem->product->title ?? 'منتج غير معروف',
+            'product_image'   => asset('storage/' . $firstItem->product->image1) ?? null,
+            'type'            => $firstItem->type,
+            'unit_price'      => $firstItem->unit_price,
+            'quantity'        => $totalQuantity,
+            'total_price'     => $this->calculateTotalPrice($firstItem, $totalQuantity),
+            'rent_start_date' => $firstItem->rent_start_date,
+            'rent_end_date'   => $firstItem->rent_end_date,
+            'rent_days'       => $firstItem->rent_days,
+        ];
+    }
+
+    private function calculateTotalPrice($item, int $quantity): float
+    {
+        $totalPrice = $item->type === 'sale'
+                    ? $item->unit_price * $quantity
+                    : $item->unit_price * $quantity * $item->rent_days;
+        return $totalPrice;
     }
 }

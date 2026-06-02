@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LessonController;
@@ -47,4 +48,12 @@ Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middlewar
 Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
 Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
 
-Route::post('addToCart',[CartController::class,'addToCart'])->middleware('auth:sanctum');
+Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sanctum');
+Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
+Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
+Route::get('/j', function () {
+    // إطلاق الحدث وإرسال رسالة
+    event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));
+    
+    return 'تم إرسال الإشعار للـ WebSocket بنجاح!';
+});
