@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Laravel\Socialite\Facades\Socialite;
 
 class UserController extends Controller
 {
@@ -105,5 +106,68 @@ class UserController extends Controller
         $user = Auth::user();
         $favorites = $user->favorites()->get();
         return FavoriteResource::collection($favorites);
+    }
+
+    ///////////////////////register and login from google///////////////////////
+
+    public function googleRegisterOrLogin(Request $request)
+    {
+        $request->validate([
+            'provider_token' => 'required|string',
+        ]);
+        try {
+            $googleUser = Socialite::driver('google')
+                ->stateless()
+                ->userFromToken($request->provider_token);
+
+            $user = User::firstOrCreate(
+                ['email' => $googleUser->getEmail()],
+                [
+                    'name' => $googleUser->getName(),
+                    'google_id' => $googleUser->getId(),
+                    'password' => null,
+                ]
+            );
+            if (!$user->google_id) {
+                $user->update(['google_id' => $googleUser->getId()]);
+            }
+
+            // الحالة الأولى: تم إنشاء الحساب للتو (تسجيل جديد)
+        if ($user->wasRecentlyCreated) {
+            return response()->json([
+                'success' => false,
+                'status' => 'pending',
+                'message' => 'تم إنشاء حسابك بنجاح. يرجى الانتظار حتى تتم الموافقة عليه من قبل الإدارة.'
+            ], 403); // 403 تعني Forbidden (ممنوع الدخول حالياً)
+        }
+
+        // الحالة الثانية: الحساب قديم، لكن الإدمن لم يوافق عليه بعد (أو قام بحظره)
+        if (!$user->active) {
+            return response()->json([
+                'success' => false,
+                'status' => 'pending',
+                'message' => 'حسابك لا يزال قيد المراجعة أو تم إيقافه من قبل الإدارة.'
+            ], 403);
+        }
+
+        // الحالة الثالثة: الحساب قديم وتمت الموافقة عليه من الإدمن (تسجيل دخول ناجح)
+        $authToken = $user->createToken('MobileAppAuthToken')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم تسجيل الدخول بنجاح.',
+            'token' => $authToken,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+            ]
+        ], 200);
+        } catch (Exception $ex) {
+            return response()->json([
+                'message' => 'Failed to authenticate with Google.',
+                'error' => $ex->getMessage(),
+            ], 500);
+        }
     }
 }

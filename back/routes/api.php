@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+Route::post('auth/google', [UserController::class, 'googleRegisterOrLogin']);
 Route::post('register',[UserController::class,'register']);
 Route::post('login',[UserController::class,'login']);
 Route::post('logout',[UserController::class,'logout'])->middleware('auth:sanctum');
@@ -51,6 +52,7 @@ Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:
 Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sanctum');
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
 Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
+Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware('auth:sanctum');
 Route::get('/j', function () {
     // إطلاق الحدث وإرسال رسالة
     event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));
