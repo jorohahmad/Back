@@ -1,6 +1,9 @@
 <?php
 
+use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\LessonController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
@@ -10,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+Route::post('auth/google', [UserController::class, 'googleRegisterOrLogin']);
 Route::post('register',[UserController::class,'register']);
 Route::post('login',[UserController::class,'login']);
 Route::post('logout',[UserController::class,'logout'])->middleware('auth:sanctum');
@@ -19,6 +23,13 @@ Route::post('create-product',[ProductController::class,'create'])->middleware('a
 Route::get('products-for-sale',[ProductController::class,'indexForSale'])->middleware('auth:sanctum');
 Route::get('products-for-rent',[ProductController::class,'indexForRent'])->middleware('auth:sanctum');
 
+Route::get('get-lessons',[LessonController::class,'index'])->middleware('auth:sanctum');
+Route::post('add-lesson',[LessonController::class,'store'])->middleware('auth:sanctum');
+
+Route::post('favorite', [UserController::class, 'toggleFavorite'])->middleware('auth:sanctum');
+Route::get('favorites', [UserController::class, 'getFavorites'])->middleware('auth:sanctum');
+
+//
 Route::post('admin/register' , [adminController::class,'register']);
 Route::post('admin/login1' , [adminController::class,'login1']);
 Route::post('admin/login2' , [adminController::class,'login2']);
@@ -37,3 +48,17 @@ Route::post('notice/update' , [NoticeController::class, 'update'])->middleware('
 Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middleware('auth:sanctum','admin');
 Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
 Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
+
+
+
+Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sanctum');
+Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
+Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
+Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware('auth:sanctum');
+Route::get('/j', function () {
+    // إطلاق الحدث وإرسال رسالة
+    event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));
+    
+    return 'تم إرسال الإشعار للـ WebSocket بنجاح!';
+});
+

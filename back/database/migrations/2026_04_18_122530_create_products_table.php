@@ -20,12 +20,14 @@ return new class extends Migration
             $table->string('image2')->nullable();
             $table->string('image3')->nullable();
             $table->string('audio')->nullable();
+            $table->string('video')->nullable();
             $table->boolean('is_for_sale')->default(false);
             $table->decimal('sale_price',8,2)->nullable();
             $table->boolean('is_for_rent')->default(false);
             $table->decimal('rent_price_daily',8,2)->nullable();
             $table->boolean('announcement')->default(false);
             $table->boolean('repricing')->default(false);
+            $table->integer('stock')->default(0);
             $table->timestamps();
         });
     }

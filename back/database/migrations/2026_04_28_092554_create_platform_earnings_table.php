@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('platform_earnings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('order_id')->constrained('orders')->cascadeOnDelete();
-            $table->foreignId('rental_id')->constrained('rentals')->cascadeOnDelete();
+            $table->foreignId('order_id')->nullable()->constrained('orders')->cascadeOnDelete();
+            $table->foreignId('rental_id')->nullable()->constrained('rentals')->cascadeOnDelete();
             $table->decimal('transaction_amount', 8, 2);
             $table->decimal('commission_amount', 8, 2);
             $table->string('type');

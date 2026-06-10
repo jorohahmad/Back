@@ -12,11 +12,14 @@ class Product extends Model
         'description',
         'image',
         'audio',
+        'video',
         'owner_id',
         'is_for_sale',
         'sale_price',
         'is_for_rent',
         'rent_price_daily',
+        'announcement',
+        'repricing',
     ];
     // الحصول على صاحب الآلة
     public function owner()
@@ -27,5 +30,17 @@ class Product extends Model
     public function items()
     {
         return $this->hasMany(ProductItem::class,'product_id');
+    }
+    protected $casts = [
+        'sale_price' => 'double', // أو 'float' كلاهما سيفي بالغرض
+        'is_for_sale' => 'boolean', // يمكنك أيضاً التأكد من أن هذا الحقل يعود كـ true/false دائماً
+        'is_for_rent' => 'boolean', // يمكنك أيضاً التأكد من أن هذا الحقل يعود كـ true/false دائماً
+        'rent_price_daily' => 'double', // أو 'float' كلاهما سيفي بالغرض
+        'announcement' => 'boolean',
+        'repricing' => 'boolean',
+    ];
+    public function favorites()
+    {
+        return $this->belongsToMany(User::class, 'favorites', 'product_id', 'user_id')->withTimestamps();
     }
 }

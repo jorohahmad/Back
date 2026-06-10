@@ -4,6 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+use function Laravel\Prompts\table;
+
 return new class extends Migration
 {
     /**
@@ -11,11 +13,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rentals', function (Blueprint $table) {
+        Schema::create('notices', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('renter_id')->constrained('users')->cascadeOnDelete();
-            $table->decimal('total_price', 8, 2);
-            $table->enum('status', ['active', 'returned', 'pending'])->default('active');
+            $table->foreignId('user_id')->constrained('users');
+            $table->string('title');
+            $table->string('description')->nullable();
+            $table->date('due_date')->nullable();
+            $table->enum('type',['archive','project','personal','urgent']);
             $table->timestamps();
         });
     }
@@ -25,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rentals');
+        Schema::dropIfExists('notices');
     }
 };

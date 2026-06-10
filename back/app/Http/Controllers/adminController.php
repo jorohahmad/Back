@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\UsersResource;
 use App\Mail\AdminMail;
 use App\Mail\approvedUserMail;
 use App\Mail\rejectedUserMail;
@@ -24,7 +25,6 @@ class adminController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->role = 'admin';
-        $user->key = random_int(1000, 9999);
         $user->password = Hash::make($request->password);
         $user->save();
 
@@ -52,6 +52,9 @@ class adminController extends Controller
         if ($user->role != 'admin') {
             return response()->json('You are not admin', 401);
         }
+        $user->update([
+            'key'=>random_int(1000, 9999)
+        ]);
         Mail::to($user->email)->send(new AdminMail($user));
         return response()->json('Ok', 200);
     }
@@ -99,7 +102,7 @@ class adminController extends Controller
     public function indexUsers()
     {
         $allUsers  = User::where('role', 'user')->get();
-        return response()->json($allUsers, 200);
+        return UsersResource::collection($allUsers);
     }
 
     // just pending users
@@ -114,13 +117,6 @@ class adminController extends Controller
     {
         $approvedUsers  = User::where('active', '1')->get();
         return response()->json($approvedUsers, 200);
-    }
-    // just rejected users
-    public function indexRejectedUser()
-    {
-        $rejectedUsers  = User::onlyTrashed()->get();
-
-        return response()->json($rejectedUsers, 200);
     }
 
     //update active to approved mean '1'
@@ -140,9 +136,13 @@ class adminController extends Controller
     {
         $user = User::findOrFail($request->id);
 
-        // Soft delete
-        $user->delete();
+        //delete
         Mail::to($user->email)->send(new rejectedUserMail($user));
+
+        $user->delete();
         return response()->json('Reject User', 200);
     }
+    
+
+
 }
