@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
@@ -31,3 +32,8 @@ Route::get('/admin/users/pending', [adminController::class, 'indexPendingUser'])
 Route::get('/admin/users/approve/{id}', [adminController::class, 'approveUser'])->middleware('auth:sanctum');
 Route::get('/admin/users/reject/{id}', [adminController::class, 'RejectUser'])->middleware('auth:sanctum');
 
+Route::post('notice/store' , [NoticeController::class, 'store'])->middleware(['auth:sanctum','admin']);
+Route::post('notice/update' , [NoticeController::class, 'update'])->middleware('auth:sanctum','admin');
+Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middleware('auth:sanctum','admin');
+Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
+Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
