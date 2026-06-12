@@ -29,5 +29,5 @@ class adminProductController extends Controller
         $product->save();
         return response()->json(['message' => 'rejected successful'], 200);
     }
-
+    
 }

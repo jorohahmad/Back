@@ -4,6 +4,7 @@ use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
 use App\Http\Controllers\adminProductController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProductController;
@@ -66,4 +67,7 @@ Route::get('/j', function () {
 Route::get('admin/product/accept' ,[adminProductController::class,'accept'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/product/reject' ,[adminProductController::class,'reject'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/product/index' ,[adminProductController::class,'index'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/dashboard/card3',[DashboardController::class,'getStats'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/dashboard/card1',[DashboardController::class,'getSupplyDemandRatio'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/dashboard/performance_summary',[DashboardController::class,'getWeeklyPerformance'])->middleware(['auth:sanctum','admin']); 
 
