@@ -34,15 +34,14 @@ class ProductController extends Controller
 
     public function indexForSale()
     {
-
         $products = Product::with(['items', 'owner'])
-            ->where('is_for_sale', true)
+            ->where('is_for_sale', true)->where('is_active', true)
             ->get();
         return ProductSaleResource::collection($products);
     }
     public function indexForRent()
     {
-        $products = Product::with(['items', 'owner'])->where('is_for_rent', true)->get();
+        $products = Product::with(['items', 'owner'])->where('is_for_rent', true)->where('is_active', true)->get();
         return ProductRentalResource::collection($products);
     }
 }
