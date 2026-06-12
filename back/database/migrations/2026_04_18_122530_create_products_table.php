@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->foreignId('owner_id')->constrained('users')->cascadeOnDelete();
+            $table->boolean('is_active')->default(false);
             $table->string('title');
             $table->text('description');
             $table->string('image1')->nullable();
