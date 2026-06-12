@@ -20,6 +20,9 @@ class Product extends Model
         'rent_price_daily',
         'announcement',
         'repricing',
+        'is_active',
+        'stock',
+        'delated'
     ];
     // الحصول على صاحب الآلة
     public function owner()
@@ -38,6 +41,8 @@ class Product extends Model
         'rent_price_daily' => 'double', // أو 'float' كلاهما سيفي بالغرض
         'announcement' => 'boolean',
         'repricing' => 'boolean',
+        'is_active' => 'boolean',
+        'delated' => 'boolean',
     ];
     public function favorites()
     {
