@@ -2,6 +2,7 @@
 
 use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
+use App\Http\Controllers\adminProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\LessonController;
 use App\Http\Controllers\NoticeController;
@@ -61,4 +62,8 @@ Route::get('/j', function () {
     
     return 'تم إرسال الإشعار للـ WebSocket بنجاح!';
 });
+
+Route::get('admin/product/accept' ,[adminProductController::class,'accept'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/product/reject' ,[adminProductController::class,'reject'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/product/index' ,[adminProductController::class,'index'])->middleware(['auth:sanctum','admin']); 
 
