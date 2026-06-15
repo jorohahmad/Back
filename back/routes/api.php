@@ -57,6 +57,9 @@ Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sa
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
 Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
 Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware('auth:sanctum');
+Route::patch('Cart/update', [CartController::class, 'updateQuantity'])->middleware('auth:sanctum');
+Route::get('receipts', [CartController::class, 'getUserReceipts'])->middleware('auth:sanctum');
+Route::get('receipts/{transaction_id}', [CartController::class, 'getReceiptByTransactionId'])->middleware('auth:sanctum');
 Route::get('/j', function () {
     // إطلاق الحدث وإرسال رسالة
     event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));

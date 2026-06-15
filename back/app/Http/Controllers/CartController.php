@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CartRequest;
 use App\Http\Requests\deleteCartRequest;
+use App\Http\Requests\UpdateCart;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -14,19 +15,23 @@ use App\Models\Rental;
 use App\Models\RentalItem;
 use App\Models\User;
 use App\Services\CartService;
+use App\Services\ReceiptService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class CartController extends Controller
 {
     protected $cartService;
+    protected $receiptService;
 
-    public function __construct(CartService $cartService)
+    public function __construct(CartService $cartService, ReceiptService $receiptService)
     {
         $this->cartService = $cartService;
+        $this->receiptService = $receiptService;
     }
 
     public function checkout(Request $request)
@@ -44,7 +49,7 @@ class CartController extends Controller
                 // فصل عناصر البيع عن عناصر الإيجار لعمل معالجة مخصصة وقفل منفصل لكل نوع
                 $saleItems = $cartItems->where('type', 'sale');
                 $rentItems = $cartItems->where('type', 'rent');
-
+                $transactionId = (string) Str::uuid();
                 // ==========================================================
                 // أولاً: معالجة الإيجار (Rentals) مع القفل المتشائم للقطع العينية
                 // ==========================================================
@@ -67,6 +72,7 @@ class CartController extends Controller
                     // إنشاء غلاف العقد الرئيسي
                     $rental = Rental::create([
                         'renter_id' => $userId,
+                        'transaction_id' => $transactionId,
                         'total_price' => $totalRentPrice,
                         'status' => 'active'
                     ]);
@@ -119,6 +125,7 @@ class CartController extends Controller
                     // إنشاء الفاتورة الرئيسية
                     $order = Order::create([
                         'buyer_id' => $userId,
+                        'transaction_id' => $transactionId,
                         'total_price' => $totalSalePrice,
                         'status' => 'completed'
                     ]);
@@ -156,6 +163,7 @@ class CartController extends Controller
 
                 return response()->json([
                     'status' => 'success',
+                    'transaction_id' => $transactionId,
                     'message' => 'تمت عملية الدفع وتوثيق العقود والعمولات بنجاح فائق!'
                 ], 200);
             });
@@ -239,6 +247,76 @@ class CartController extends Controller
             return response()->json([
                 'status'  => 'error',
                 'message' => 'حدث خطأ أثناء محاولة الحذف من السلة.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateQuantity(UpdateCart $request)
+    {
+        try {
+            $userId = Auth::user()->id;
+
+            $steps = $request->validated('steps') ?? 1;
+
+            $this->cartService->updateItemQuantity(
+                $userId,
+                $request->validated('cart_ids'), // استخدام validated() لضمان الأمان
+                $request->validated('action'),
+                $steps
+            );
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم تحديث الكمية بنجاح.'
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function getReceiptByTransactionId(string $transactionId)
+    {
+        try {
+            $userId = Auth::user()->id;
+
+            // تمرير المهمة للخدمة
+            $receipt = $this->receiptService->getReceiptDetails($transactionId, $userId);
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $receipt
+            ], 200);
+        } catch (Exception $e) {
+            // تحديد كود الخطأ (404 إذا لم يتم العثور عليه، أو 500 للأخطاء العامة)
+            $statusCode = $e->getCode() === 404 ? 404 : 500;
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ], $statusCode);
+        }
+    }
+
+    public function getUserReceipts()
+    {
+        try {
+            $userId = Auth::user()->id;
+
+            // تمرير المهمة للخدمة لتتولى الاستعلام والترتيب
+            $receipts = $this->receiptService->getAllUserReceipts($userId);
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $receipts
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'حدث خطأ أثناء جلب الإيصالات.',
                 'error'   => $e->getMessage()
             ], 500);
         }

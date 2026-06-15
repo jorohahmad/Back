@@ -167,4 +167,74 @@ class CartService
                     : $item->unit_price * $quantity * $item->rent_days;
         return $totalPrice;
     }
+
+    //update cart
+    public function updateItemQuantity(int $userId, array $cartIds, string $action, int $steps = 1): void
+    {
+        // 1. أخذ السطر الأول كمرجع لمعرفة نوع المنتج
+        $referenceCartId = $cartIds[0];
+        $cartItem = Cart::where('user_id', $userId)->findOrFail($referenceCartId);
+        $product = Product::findOrFail($cartItem->product_id);
+
+        // ==========================================
+        // حالة الشراء (Sale): تعديل حقل quantity فقط
+        // ==========================================
+        if ($cartItem->type === 'sale') {
+            if ($action === 'increase') {
+                // التحقق من أن المخزون يكفي للكمية الحالية + عدد الضغطات الجديدة
+                if ($product->stock < ($cartItem->quantity + $steps)) {
+                    throw new Exception("عذراً، الكمية المطلوبة غير متوفرة. المتاح في المخزن: " . $product->stock);
+                }
+                
+                // الزيادة بمقدار الخطوات
+                $cartItem->increment('quantity', $steps);
+                
+            } elseif ($action === 'decrease') {
+                // التأكد من أن النقصان لن يصل للصفر أو رقم سالب
+                if (($cartItem->quantity - $steps) >= 1) {
+                    $cartItem->decrement('quantity', $steps);
+                } else {
+                    throw new Exception("لا يمكن إنقاص الكمية عن 1. استخدم زر الحذف لإزالة العنصر من السلة.");
+                }
+            }
+        } 
+        // ==========================================
+        // حالة الإيجار (Rent): إضافة أو حذف أسطر كاملة
+        // ==========================================
+        elseif ($cartItem->type === 'rent') {
+            if ($action === 'increase') {
+                // البحث عن قطع أخرى متاحة للإيجار دفعة واحدة بعدد الـ steps
+                $itemsAlreadyInCarts = Cart::whereNotNull('product_item_id')->pluck('product_item_id')->toArray();
+
+                $availableItems = ProductItem::where('product_id', $product->id)
+                    ->where('status', 'active')
+                    ->whereNotIn('id', $itemsAlreadyInCarts)
+                    ->limit($steps) // جلب قطع بعدد الضغطات
+                    ->get();
+
+                if ($availableItems->count() < $steps) {
+                    throw new Exception("عذراً، لا يوجد قطع إضافية كافية للإيجار. المتاح للإضافة: " . $availableItems->count());
+                }
+
+                // التكرار لنسخ السطر المرجعي وإنشاء أسطر جديدة حسب القطع المتاحة
+                foreach ($availableItems as $item) {
+                    $newCartItem = $cartItem->replicate();
+                    $newCartItem->product_item_id = $item->id;
+                    $newCartItem->created_at = now();
+                    $newCartItem->updated_at = now();
+                    $newCartItem->save();
+                }
+
+            } elseif ($action === 'decrease') {
+                // التأكد من أن المستخدم لا يحاول حذف كل شيء (يجب بقاء سطر واحد على الأقل)
+                if (count($cartIds) > $steps) {
+                    // نقتطع آخر IDs من المصفوفة بمقدار عدد الضغطات لنحذفها
+                    $idsToDelete = array_slice($cartIds, -$steps);
+                    Cart::whereIn('id', $idsToDelete)->where('user_id', $userId)->delete();
+                } else {
+                    throw new Exception("لا يمكن إنقاص الكمية عن 1. استخدم زر الحذف لإزالة العنصر بالكامل.");
+                }
+            }
+        }
+    }
 }
