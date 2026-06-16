@@ -1,6 +1,8 @@
 <?php
+
 namespace App\Services;
 
+use App\Jobs\ProcessProductImageJob;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
 
@@ -15,11 +17,15 @@ class ProductService
             $product->title = $data['title'];
             $product->description = $data['description'];
             $product->stock = $data['count'];
-
+            $tempUploads = [];
             for ($i = 1; $i <= 3; $i++) {
-                if ($data['image' . $i]) {
-                    $s = saveFile($data['image' . $i], 'imageInst');
-                    $product->{'image' . $i} = $s;
+                if (isset($data['image' . $i])) {
+                    // 1. حفظ سريع جداً في المجلد المؤقت
+                    $tempPath = saveTempFile($data['image' . $i]);
+
+                    $tempUploads['image' . $i] = $tempPath; // يمكنك وضع صورة "جاري التحميل" افتراضية
+                    // 2. تعيين قيمة مبدئية لكي لا يبقى الحقل فارغاً
+                    $product->{'image' . $i} = 'processing.png';
                 }
             }
             if ($data['audio']) {
@@ -36,6 +42,10 @@ class ProductService
             $product->is_for_rent = $data['is_for_rent'] ?? false;
             $product->rent_price_daily = $data['rent_price_daily'] ?? 0;
             $product->save();
+
+            foreach ($tempUploads as $columnName => $tempPath) {
+                ProcessProductImageJob::dispatch($tempPath, $product->id, $columnName);
+            }
             // create product items for rent
             if ($data['is_for_rent']) {
                 for ($i = 0; $i < $data['count']; $i++) {

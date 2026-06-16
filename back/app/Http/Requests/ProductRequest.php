@@ -29,7 +29,7 @@ class ProductRequest extends FormRequest
             'image2' => 'nullable|image|max:2048',
             'image3' => 'nullable|image|max:2048',
             'audio' => 'nullable|max:10240',
-            'video' => 'nullable|max:51200',
+            'video' => 'nullable|max:204800',
             'is_for_sale' => 'boolean',
             'sale_price' => 'required_if:is_for_sale,1|numeric|min:0',
             'is_for_rent' => 'boolean',

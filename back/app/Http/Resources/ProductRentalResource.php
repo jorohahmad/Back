@@ -15,6 +15,7 @@ class ProductRentalResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $activeItems = $this->items->where('status', 'active');
         return [
             'id' => $this->id,
             'owner_name' => $this->owner ? $this->owner->name : null,
@@ -30,9 +31,9 @@ class ProductRentalResource extends JsonResource
             'video' => $this->video ? asset('storage/' . $this->video) : null,
             'is_for_rent' => $this->is_for_rent,
             'rent_price_daily' => $this->rent_price_daily,
-            'is_favorite' => $this->favorites()->where('user_id', Auth()->user()->id)->exists(),
-            'items_count' => $this->items()->where('status', 'active')->count(),
-            'serial_number' => $this->items()->where('status', 'active')->pluck('id')->toArray(),
+            'is_favorite' => $this->favorites()->where('user_id', auth()->id())->exists(),
+            'items_count'      => $activeItems->count(),
+            'serial_number'    => $activeItems->pluck('id')->toArray(),
         ];
     }
 }

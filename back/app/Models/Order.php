@@ -13,6 +13,7 @@ class Order extends Model
         'product_item_id',
         'total_price',
         'status',
+        'transaction_id'
     ];
     public function buyer()
     {
@@ -32,5 +33,9 @@ class Order extends Model
     {
         // علاقة واحد لواحد (كل طلب له سجل ربح واحد)
         return $this->hasOne(PlatformEarning::class, 'order_id');
+    }
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class, 'order_id');
     }
 }

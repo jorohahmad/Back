@@ -57,10 +57,13 @@ class ReceiptService
             return null;
         }
 
+        // 👈 سطر الحماية واستخدام اسم العلاقة الصحيح حسب الموديل: orderItems
+        $items = $order->orderItems ?? collect([]);
+
         return [
             'order_id'    => $order->id,
             'total_price' => $order->total_price,
-            'items'       => $order->orderItems->map(function ($item) {
+            'items'       => $items->map(function ($item) {
                 return [
                     'product_name' => $item->product->title ?? 'منتج غير معروف',
                     'quantity'     => $item->quantity,
@@ -79,11 +82,15 @@ class ReceiptService
             return null;
         }
 
+        // 👈 سطر الحماية واستخدام اسم العلاقة الصحيح حسب الموديل: rentalItems
+        $items = $rental->rentalItems ?? collect([]);
+
         return [
             'rental_id'   => $rental->id,
             'total_price' => $rental->total_price,
-            'items'       => $rental->rentalItems->map(function ($item) {
+            'items'       => $items->map(function ($item) {
                 return [
+                    // الانتباه هنا أيضاً لسلسلة العلاقات لتجنب أخطاء null أخرى
                     'product_name' => $item->productItem->product->title ?? 'عنصر غير معروف',
                     'rent_days'    => $item->rent_days,
                     'start_date'   => $item->start_date,
@@ -93,24 +100,28 @@ class ReceiptService
             })->toArray(),
         ];
     }
+
     public function getAllUserReceipts(int $userId)
     {
-        // 1. جلب المشتريات
+        // 1. جلب المشتريات (تعديل item إلى orderItems لتطابق الموديل)
         $orders = Order::with('orderItems.product')
             ->where('buyer_id', $userId)
             ->whereNotNull('transaction_id')
             ->get()
             ->keyBy('transaction_id');
-        // 2. جلب الإيجارات
+
+        // 2. جلب الإيجارات (تعديل item إلى rentalItems لتطابق الموديل)
         $rentals = Rental::with('rentalItems.productItem.product')
             ->where('renter_id', $userId)
             ->whereNotNull('transaction_id')
             ->get()
             ->keyBy('transaction_id');
+
         // 3. دمج أرقام المعاملات بدون تكرار
         $transactionIds = $orders->keys()->merge($rentals->keys())->unique();
 
         $receipts = [];
+
         // 4. بناء هيكل كل إيصال باستخدام الدالة المساعدة الموجودة مسبقاً! (إعادة استخدام الكود DRY)
         foreach ($transactionIds as $transactionId) {
             $order  = $orders->get($transactionId);
@@ -118,6 +129,7 @@ class ReceiptService
 
             $receipts[] = $this->buildReceiptArray($transactionId, $order, $rental);
         }
+
         // 5. ترتيب الإيصالات من الأحدث إلى الأقدم بناءً على حقل date
         usort($receipts, function ($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
