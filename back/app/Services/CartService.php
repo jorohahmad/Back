@@ -107,7 +107,7 @@ class CartService
     // view cart
     public function getFormattedCart(int $userId): array
     {
-        $cartItems = Cart::with('product')->where('user_id', $userId)->get();
+        $cartItems = Cart::with('product.items')->where('user_id', $userId)->get();
 
         if ($cartItems->isEmpty()) {
             return [
@@ -143,8 +143,23 @@ class CartService
     private function formatSingleGroup(Collection $group): array
     {
         $firstItem     = $group->first();
-        $totalQuantity = $group->sum('quantity');
+        // 🎯 التعديل الجذري هنا: 
+        // إذا كان بيع نجمع الأرقام، وإذا كان إيجار نعدّ الأسطر فقط لنتجاهل أي أرقام خاطئة في الداتا بيز!
+        $totalQuantity = $firstItem->type === 'sale' 
+                         ? $group->sum('quantity') 
+                         : $group->count();
 
+        // 👇 تحديد "العدد المتاح" بذكاء بناءً على نوع العملية
+        if ($firstItem->type === 'sale') {
+            // في حالة الشراء: العدد المتاح هو المخزون
+            $itemsCount = $firstItem->product?->stock ?? 0;
+            $availableRentItemIds = []; // لا يلزم أرقام قطع في المبيعات
+        } else {
+            // في حالة الإيجار: العدد المتاح هو القطع العينية النشطة
+            $activeItems = $firstItem->product ? $firstItem->product->items->where('status', 'active') : collect([]);
+            $itemsCount  = $activeItems->count();
+            $availableRentItemIds = $activeItems->pluck('id')->toArray();
+        }
         return [
             'cart_ids'        => $group->pluck('id')->toArray(),
             'product_id'      => $firstItem->product_id,
@@ -153,6 +168,7 @@ class CartService
             'type'            => $firstItem->type,
             'unit_price'      => $firstItem->unit_price,
             'quantity'        => $totalQuantity,
+            'items_count'     => $itemsCount,
             'total_price'     => $this->calculateTotalPrice($firstItem, $totalQuantity),
             'rent_start_date' => $firstItem->rent_start_date,
             'rent_end_date'   => $firstItem->rent_end_date,
@@ -163,8 +179,8 @@ class CartService
     private function calculateTotalPrice($item, int $quantity): float
     {
         $totalPrice = $item->type === 'sale'
-                    ? $item->unit_price * $quantity
-                    : $item->unit_price * $quantity * $item->rent_days;
+            ? $item->unit_price * $quantity
+            : $item->unit_price * $quantity * $item->rent_days;
         return $totalPrice;
     }
 
@@ -185,10 +201,9 @@ class CartService
                 if ($product->stock < ($cartItem->quantity + $steps)) {
                     throw new Exception("عذراً، الكمية المطلوبة غير متوفرة. المتاح في المخزن: " . $product->stock);
                 }
-                
+
                 // الزيادة بمقدار الخطوات
                 $cartItem->increment('quantity', $steps);
-                
             } elseif ($action === 'decrease') {
                 // التأكد من أن النقصان لن يصل للصفر أو رقم سالب
                 if (($cartItem->quantity - $steps) >= 1) {
@@ -197,7 +212,7 @@ class CartService
                     throw new Exception("لا يمكن إنقاص الكمية عن 1. استخدم زر الحذف لإزالة العنصر من السلة.");
                 }
             }
-        } 
+        }
         // ==========================================
         // حالة الإيجار (Rent): إضافة أو حذف أسطر كاملة
         // ==========================================
@@ -220,11 +235,12 @@ class CartService
                 foreach ($availableItems as $item) {
                     $newCartItem = $cartItem->replicate();
                     $newCartItem->product_item_id = $item->id;
+                    // 👈 أضف هذا السطر: إجبار الكمية على 1 لتنظيف أي بيانات قديمة في المخزن
+                    $newCartItem->quantity = 1;
                     $newCartItem->created_at = now();
                     $newCartItem->updated_at = now();
                     $newCartItem->save();
                 }
-
             } elseif ($action === 'decrease') {
                 // التأكد من أن المستخدم لا يحاول حذف كل شيء (يجب بقاء سطر واحد على الأقل)
                 if (count($cartIds) > $steps) {
