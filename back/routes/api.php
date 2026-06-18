@@ -74,3 +74,15 @@ Route::get('admin/dashboard/card3',[DashboardController::class,'getStats'])->mid
 Route::get('admin/dashboard/card1',[DashboardController::class,'getSupplyDemandRatio'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/dashboard/performance_summary',[DashboardController::class,'getWeeklyPerformance'])->middleware(['auth:sanctum','admin']); 
 
+// الرسم البياني الشريطي (الاقسام الاكثر مبيعا و الاقسام الاكثر تأجيرا)
+Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
+
+// يطاقات الارقام السريعة "متوسط مده الايجار و اجمالي القطغ المؤجرة حاليا"و
+Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
+
+// الدونات
+Route::get('dashboard/transaction-types', [\App\Http\Controllers\DashboardController::class, 'getTransactionTypes'])
+    ->middleware('auth:sanctum', 'admin');
+//الرسم البياني
+Route::get('dashboard/revenue-chart', [\App\Http\Controllers\DashboardController::class, 'getRevenueChart'])
+    ->middleware('auth:sanctum','admin');
