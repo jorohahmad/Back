@@ -13,4 +13,8 @@ class RentalItem extends Model
         'start_date',
         'end_date',
     ];
+    public function productItem()
+    {
+        return $this->belongsTo(ProductItem::class, 'product_item_id');
+    }
 }

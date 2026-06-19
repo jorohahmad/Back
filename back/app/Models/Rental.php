@@ -15,6 +15,7 @@ class Rental extends Model
         'end_date',
         'total_price',
         'status',
+        'transaction_id'
     ];
     public function renter()
     {
@@ -33,5 +34,10 @@ class Rental extends Model
     public function platformEarning()
     {
         return $this->hasOne(PlatformEarning::class, 'rental_id');
+    }
+
+    public function rentalItems()
+    {
+        return $this->hasMany(RentalItem::class, 'rental_id');
     }
 }

@@ -57,6 +57,9 @@ Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sa
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
 Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
 Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware('auth:sanctum');
+Route::patch('Cart/update', [CartController::class, 'updateQuantity'])->middleware('auth:sanctum');
+Route::get('receipts', [CartController::class, 'getUserReceipts'])->middleware('auth:sanctum');
+Route::get('receipts/{transaction_id}', [CartController::class, 'getReceiptByTransactionId'])->middleware('auth:sanctum');
 Route::get('/j', function () {
     // إطلاق الحدث وإرسال رسالة
     event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));
@@ -71,3 +74,15 @@ Route::get('admin/dashboard/card3',[DashboardController::class,'getStats'])->mid
 Route::get('admin/dashboard/card1',[DashboardController::class,'getSupplyDemandRatio'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/dashboard/performance_summary',[DashboardController::class,'getWeeklyPerformance'])->middleware(['auth:sanctum','admin']); 
 
+// الرسم البياني الشريطي (الاقسام الاكثر مبيعا و الاقسام الاكثر تأجيرا)
+Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
+
+// يطاقات الارقام السريعة "متوسط مده الايجار و اجمالي القطغ المؤجرة حاليا"و
+Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
+
+// الدونات
+Route::get('dashboard/transaction-types', [\App\Http\Controllers\DashboardController::class, 'getTransactionTypes'])
+    ->middleware('auth:sanctum', 'admin');
+//الرسم البياني
+Route::get('dashboard/revenue-chart', [\App\Http\Controllers\DashboardController::class, 'getRevenueChart'])
+    ->middleware('auth:sanctum','admin');

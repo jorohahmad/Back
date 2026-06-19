@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\PlatformEarning;
 use App\Models\Product;
 use App\Models\Rental;
+use App\Services\DashboardService;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
@@ -13,6 +14,34 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends   Controller
 {
+    private DashboardService $dashboardService;
+
+    public function __construct(DashboardService $dashboardService)
+    {
+        $this->dashboardService = $dashboardService;
+    }
+    // خطوط بيانية ارادات الايجارات و المبيعات و العمولة %2
+
+    public function getRevenueChart()
+    {
+        try {
+            // نجلب بيانات آخر 7 أيام (يمكنك جعل الرقم ديناميكياً يرسله الفرونت إند لاحقاً)
+            $data = $this->dashboardService->getRevenueChartData(7);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'success getting data from dashboard',
+                'data'    => $data
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' =>'error in get data from dashboard',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function getStats()
     {
         try {
@@ -300,4 +329,75 @@ class DashboardController extends   Controller
         }
         return '$' . round($number, 2);
     }
+
+    
+    // مخطط الدونات توزيع عمليات البيع و الاجار 
+
+    public function getTransactionTypes()
+    {
+        try {
+            $data = $this->dashboardService->getTransactionTypesData();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم جلب بيانات توزيع العمليات بنجاح',
+                'data'    => $data
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'حدث خطأ أثناء جلب البيانات',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+        // يطاقات الارقام السريعة "متوسط مده الايجار و اجمالي القطغ المؤجرة حاليا"و
+
+        public function getQuickStats()
+    {
+        try {
+            $data = $this->dashboardService->getQuickStatsData();
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => 'تم جلب الإحصائيات السريعة بنجاح',
+                'data'    => $data
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'حدث خطأ أثناء جلب الإحصائيات',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    
+    // الرسم البياني الشريطي (الاقسام الاكثر مبيعا و الاقسام الاكثر تأجيرا)
+    public function getTopMachines(Request $request)
+    {
+        try {
+            // استقبال الـ type من الفرونت إند (?type=sale أو ?type=rent)
+            $type = $request->query('type', 'sale');
+
+            $data = $this->dashboardService->getTopMachinesData($type, 5);
+
+            return response()->json([
+                'status'  => 'success',
+                'message' => "تم جلب أفضل الآلات بنجاح لحالة: {$type}",
+                'data'    => $data
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'حدث خطأ أثناء جلب بيانات الداشبورد',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }

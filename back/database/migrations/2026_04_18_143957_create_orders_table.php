@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('buyer_id')->constrained('users');
+            $table->string('transaction_id')->nullable(); 
             $table->decimal('total_price', 8, 2);
             $table->enum('status', ['pending', 'completed', 'cancelled'])->default('pending');
             $table->timestamps();

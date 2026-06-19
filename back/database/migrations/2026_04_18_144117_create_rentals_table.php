@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('rentals', function (Blueprint $table) {
             $table->id();
             $table->foreignId('renter_id')->constrained('users')->cascadeOnDelete();
+            $table->string('transaction_id')->nullable(); // يفضل عمل Index عليه لتسريع البحث
             $table->decimal('total_price', 8, 2);
             $table->enum('status', ['active', 'returned', 'pending'])->default('active');
             $table->timestamps();

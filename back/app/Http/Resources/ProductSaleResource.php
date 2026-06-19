@@ -31,9 +31,9 @@ class ProductSaleResource extends JsonResource
             'video' => $this->video ? asset('storage/' . $this->video) : null,
             'is_for_sale' => $this->is_for_sale,
             'sale_price' => $this->sale_price,
-            'is_favorite' => $this->favorites()->where('user_id', Auth()->user()->id)->exists(),
-            'items_count' => $this->items()->count(),
-            'serial_number' => $this->items()->where('status', 'active')->pluck('id')->toArray(),
+            'is_favorite' => $this->favorites()->where('user_id', auth()->id())->exists(),
+            'items_count' => $this->stock,
+            
         ];
     }
 }
