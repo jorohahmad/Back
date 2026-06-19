@@ -15,34 +15,41 @@ class NoticeController extends Controller
 {
     use AuthorizesRequests;
     // عرض كل الملاحظات التي تنطبق عليها الشروط المطلوبة
-    public function index()
-    {
+    public function index(Request $request)
+{
+    // 1. جلب المستخدم الحالي بشكل آمن عبر Sanctum
+    $user = $request->user();
 
-        $userId = Auth::user()->id;
-        $user = User::findOrFail($userId);
-
-        if (!$user->isAdmin()) {
-            return response()->json([
-                'message' => 'are not admin'
-            ], 403);
-        }
-
-        $notices = Notice::where(function ($quary) use ($user) {
-            $quary->where('type', '!=', 'personal')
-                ->orWhere(function ($q) use ($user) {
-                    $q->where('type', 'personal')
-                        ->where('user_id', $user->id);
-                });
-        })
-            ->OrderBy('due_date', 'asc')
-            ->get();
-
+    // حماية إضافية في حال مر الطلب بدون مستخدم
+    if (!$user) {
         return response()->json([
-            'status' => 'success',
-            'data' => $notices
-        ], 200);
+            'message' => 'Unauthenticated'
+        ], 401);
     }
 
+    // 2. فحص الصلاحيات (مع التأكد أن الدالة موجودة فعلاً في المودل لتجنب الخطأ 500)
+    if (!method_exists($user, 'isAdmin') || !$user->isAdmin()) {
+        return response()->json([
+            'message' => 'You are not admin'
+        ], 403);
+    }
+
+    // 3. جلب البيانات
+    $notices = Notice::where(function ($query) use ($user) {
+        $query->where('type', '!=', 'personal')
+              ->orWhere(function ($q) use ($user) {
+                  $q->where('type', 'personal')
+                    ->where('user_id', $user->id);
+              });
+    })
+    ->orderBy('due_date', 'asc')
+    ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $notices
+    ], 200);
+}
     public function store(StoreNoticeRequest $request): JsonResponse
     {
         $userId = Auth::user()->id;

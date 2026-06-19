@@ -11,7 +11,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller
+class DashboardController extends   Controller
 {
     public function getStats()
     {
@@ -62,7 +62,7 @@ class DashboardController extends Controller
                 'status' => 'success',
                 'data'   => [
                     'orders' => [
-                        'title'=>'orders',
+                        'title' => 'orders',
                         'weekly' => [
                             'current_value'     => $thisWeekOrders,
                             'previous_value'    => $lastWeekOrders,
@@ -75,7 +75,7 @@ class DashboardController extends Controller
                         ]
                     ],
                     'rentals' => [
-                        'title'=>'rentals',
+                        'title' => 'rentals',
                         'weekly' => [
                             'current_value'     => $thisWeekRentals,
                             'previous_value'    => $lastWeekRentals,
@@ -86,21 +86,22 @@ class DashboardController extends Controller
                             'previous_value'    => $lastMonthRentals,
                             'percentage' => $this->calculateGrowthPercentage($thisMonthRentals, $lastMonthRentals),
                         ],
-                        // 🌟 الحزمة المالية الجديدة للفرونت إند
-                        'earnings' => [
-                            'title'=>'earnings',
-                            'weekly' => [
-                                'current_value'     => round($thisWeekEarnings, 2),
-                                'previous_value'    => round($lastWeekEarnings, 2),
-                                'percentage' => $this->calculateGrowthPercentage($thisWeekEarnings, $lastWeekEarnings),
-                            ],
-                            'monthly' => [
-                                'current_value'     => round($thisMonthEarnings, 2),
-                                'previous_value'    => round($lastMonthEarnings, 2),
-                                'percentage' => $this->calculateGrowthPercentage($thisMonthEarnings, $lastMonthEarnings),
-                            ]
+                    ],
+                    // 🌟 الحزمة المالية الجديدة للفرونت إند
+                    'earnings' => [
+                        'title' => 'earnings',
+                        'weekly' => [
+                            'current_value'     => round($thisWeekEarnings, 2),
+                            'previous_value'    => round($lastWeekEarnings, 2),
+                            'percentage' => $this->calculateGrowthPercentage($thisWeekEarnings, $lastWeekEarnings),
+                        ],
+                        'monthly' => [
+                            'current_value'     => round($thisMonthEarnings, 2),
+                            'previous_value'    => round($lastMonthEarnings, 2),
+                            'percentage' => $this->calculateGrowthPercentage($thisMonthEarnings, $lastMonthEarnings),
                         ]
                     ]
+
                 ]
             ], 200);
         } catch (Exception $e) {
@@ -123,7 +124,7 @@ class DashboardController extends Controller
         return round((($current - $previous) / $previous) * 100, 2);
     }
 
-    
+
     /**
      * حساب نسبة العرض مقابل الطلب في المنصة (أسبوعياً، شهرياً، وكلياً)
      */
@@ -173,26 +174,26 @@ class DashboardController extends Controller
             return response()->json([
                 'status' => 'success',
                 'data'   => [
-                    'conversion'=>[
-                    'title'=>'conversion',
-                    'weekly' => [
-                        'supply'     => $weeklySupply,
-                        'demand'     => $weeklyDemand,
-                        'percentage' => $this->calculateRatio($weeklyDemand, $weeklySupply)
-                    ],
-                    'monthly' => [
-                        'supply'     => $monthlySupply,
-                        'demand'     => $monthlyDemand,
-                        'percentage' => $this->calculateRatio($monthlyDemand, $monthlySupply)
-                    ],
-                    'overall' => [
-                        'supply'     => $overallSupply,
-                        'demand'     => $overallDemand,
-                        'percentage' => $this->calculateRatio($overallDemand, $overallSupply)
+                    'conversion' => [
+                        'title' => 'conversion',
+                        'weekly' => [
+                            'supply'     => $weeklySupply,
+                            'demand'     => $weeklyDemand,
+                            'percentage' => $this->calculateRatio($weeklyDemand, $weeklySupply)
+                        ],
+                        'monthly' => [
+                            'supply'     => $monthlySupply,
+                            'demand'     => $monthlyDemand,
+                            'percentage' => $this->calculateRatio($monthlyDemand, $monthlySupply)
+                        ],
+                        'overall' => [
+                            'supply'     => $overallSupply,
+                            'demand'     => $overallDemand,
+                            'percentage' => $this->calculateRatio($overallDemand, $overallSupply)
+                        ]
                     ]
-                ]]
+                ]
             ], 200);
-
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
@@ -280,7 +281,6 @@ class DashboardController extends Controller
                     'daily_performance'  => $weeklyData
                 ]
             ], 200);
-
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',

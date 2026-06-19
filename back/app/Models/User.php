@@ -80,4 +80,12 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id')->withTimestamps();
     }
+    public function isAdmin()
+{
+    // افترض أن لديك عمود اسمه 'role' وقيمته 'admin' للمدير
+    return $this->role === 'admin'; 
+    
+    // أو إذا كان لديك عمود boolean اسمه 'is_admin'
+    // return $this->is_admin == 1; 
+}
 }
