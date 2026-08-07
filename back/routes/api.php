@@ -78,7 +78,7 @@ Route::get('admin/dashboard/performance_summary',[DashboardController::class,'ge
 Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
 
 // يطاقات الارقام السريعة "متوسط مده الايجار و اجمالي القطغ المؤجرة حاليا"و
-Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
+Route::get('dashboard/quick-stats', [DashboardController::class, 'getQuickStats'])->middleware(['auth:sanctum', 'admin']);
 
 // الدونات
 Route::get('dashboard/transaction-types', [\App\Http\Controllers\DashboardController::class, 'getTransactionTypes'])
