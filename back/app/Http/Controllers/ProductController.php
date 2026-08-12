@@ -15,17 +15,17 @@ class ProductController extends Controller
 {
     protected $productService;
 
-     public function __construct(ProductService $productService)
+    public function __construct(ProductService $productService)
     {
         $this->productService = $productService;
     }
-    
+
     public function create(ProductRequest $request)
     {
         $data = $request->validated();
         $userId = Auth::user()->id;
         // create product
-       $product = $this->productService->createProduct($userId, $data);
+        $product = $this->productService->createProduct($userId, $data);
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
@@ -34,14 +34,18 @@ class ProductController extends Controller
 
     public function indexForSale()
     {
-        $products = Product::with(['items', 'owner'])
+        $products = Product::with(['items', 'owner', 'favorites' => function ($query) {
+            $query->where('user_id', Auth::id());
+        }])
             ->where('is_for_sale', true)->where('is_active', true)
             ->get();
         return ProductSaleResource::collection($products);
     }
     public function indexForRent()
     {
-        $products = Product::with(['items', 'owner'])->where('is_for_rent', true)->where('is_active', true)->get();
+        $products = Product::with(['items', 'owner', 'favorites' => function ($query) {
+            $query->where('user_id', Auth::id());
+        }])->where('is_for_rent', true)->where('is_active', true)->get();
         return ProductRentalResource::collection($products);
-    }
+    } //$products = Product::with(['items', 'owner'])
 }

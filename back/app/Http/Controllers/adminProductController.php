@@ -10,7 +10,7 @@ class adminProductController extends Controller
 {
     public function index()
     {
-        $allproduct = Product::where('is_active', false)->where('delated', false);
+        $allproduct = Product::where('is_active', false)->where('delated', false)->get();
         return productAdmin::collection($allproduct);
     }
 

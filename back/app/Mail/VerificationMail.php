@@ -10,17 +10,16 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class RegisterMail extends Mailable implements ShouldQueue
+class VerificationMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
-
+    public $user;
     /**
      * Create a new message instance.
      */
-    public $name;
-    public function __construct($name)
+    public function __construct($user)
     {
-        $this->name=$name;
+        $this->user = $user;
     }
 
     /**
@@ -29,7 +28,7 @@ class RegisterMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to the SwiftCart application',
+            subject: 'Verification Mail',
         );
     }
 
@@ -39,7 +38,7 @@ class RegisterMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'mail.register-mail',
+            view: 'mail.verification-mail',
         );
     }
 

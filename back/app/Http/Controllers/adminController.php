@@ -5,8 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Resources\UsersResource;
 use App\Mail\AdminMail;
 use App\Mail\approvedUserMail;
+use App\Mail\AcceptMail;
+use App\Mail\RejectVerificationMail;
 use App\Mail\rejectedUserMail;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -53,7 +56,7 @@ class adminController extends Controller
             return response()->json('You are not admin', 401);
         }
         $user->update([
-            'key'=>random_int(1000, 9999)
+            'key' => random_int(1000, 9999)
         ]);
         Mail::to($user->email)->send(new AdminMail($user));
         return response()->json('Ok', 200);
@@ -67,17 +70,17 @@ class adminController extends Controller
             'key'   => 'required'
         ]);
         $user = User::where('email', $request->email)->firstOrFail();
+        // التحقق من صحة الكود (OTP)
         if ($user->key != $request->key) {
-            $user->update([
-                'key' => (string)random_int(1000, 9999)
-            ]);
+            // 👈 نكتفي بإرجاع رسالة خطأ واضحة دون المساس بقاعدة البيانات
             return response()->json([
-                'message' => 'Invalid key',
+                'message' => 'الكود الذي أدخلته غير صحيح. يرجى التأكد والمحاولة مرة أخرى.'
             ], 401);
         }
-        $user->update([
-            'key' => (string)random_int(1000, 9999)
-        ]);
+        // ---------------------------------------------------------
+        // إذا وصل الكود إلى هنا، فهذا يعني أن الـ OTP صحيح 100%
+        // الآن نقوم بتصفير الكود (لحمايته من إعادة الاستخدام) وتوليد التوكن
+        $user->update(['key' => null]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
         return response()->json([
@@ -106,9 +109,9 @@ class adminController extends Controller
     }
 
     // just pending users
-    public function indexPendingUser()
+    public function indexPendingAdmin()
     {
-        $pendingUsers  = User::where('active', '0')->get();
+        $pendingUsers  = User::where('active', '0')->where('role','admin')->get();
         return response()->json($pendingUsers, 200);
     }
 
@@ -118,7 +121,11 @@ class adminController extends Controller
         $approvedUsers  = User::where('active', '1')->get();
         return response()->json($approvedUsers, 200);
     }
-
+    public function acceptVerification()
+    {
+        $pendingUsers=User::where('active', '0')->where('role','user')->where('is_verified', true)->get();
+        return response()->json($pendingUsers, 200);
+    }
     //update active to approved mean '1'
     public function approveUser(Request $request)
     {
@@ -127,8 +134,18 @@ class adminController extends Controller
         // active => 1
         $user->active = '1';
         $user->save();
-        Mail::to($user->email)->send(new approvedUserMail($user));
+        Mail::to($user->email)->queue(new AcceptMail($user));
         return response()->json('Approve User', 200);
+    }
+    public function approveAdmin(Request $request)
+    {
+        $user = User::findOrFail($request->id);
+
+        // active => 1
+        $user->active = '1';
+        $user->save();
+        Mail::to($user->email)->send(new approvedUserMail($user));
+        return response()->json('Approve Admin', 200);
     }
 
     //update active to rejected mean '2'
@@ -137,12 +154,58 @@ class adminController extends Controller
         $user = User::findOrFail($request->id);
 
         //delete
-        Mail::to($user->email)->send(new rejectedUserMail($user));
+        Mail::to($user->email)->queue(new RejectVerificationMail($user));
 
         $user->delete();
         return response()->json('Reject User', 200);
     }
-    
+    public function RejectAdmin(Request $request)
+    {
+        $user = User::findOrFail($request->id);
 
+        //delete
+        Mail::to($user->email)->send(new rejectedUserMail($user));
 
+        $user->delete();
+        return response()->json('Reject Admin', 200);
+    }
+
+    public function updateInformation(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $request->validate([
+            'name'  => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|max:255|unique:users,email,' . $user->id,
+        ]);
+
+        $user->update($request->only(['name', 'email']));
+
+        return (new UsersResource($user))->additional([
+            'message' => 'تم تحديث بياناتك الشخصية بنجاح.'
+        ]);
+    }
+
+    public function updateImage(Request $request)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $request->validate([
+            'imagePersonal' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+        ]);
+        // حتى لا يمتلئ السيرفر بآلاف الصور المهملة بمرور الوقت
+        if ($user->imagePersonal) {
+            Storage::disk('public')->delete($user->imagePersonal);
+        }
+
+        $newImagePath = saveFile($request->file('imagePersonal'), 'imagePersonal');
+        $user->update([
+            'imagePersonal' => $newImagePath
+        ]);
+        return response()->json([
+            'message' => 'تم تحديث الصورة الشخصية بنجاح.',
+            'image' => asset('storage/' . $user->imagePersonal),
+        ], 200);
+    }
 }

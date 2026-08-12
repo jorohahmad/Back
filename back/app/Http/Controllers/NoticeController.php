@@ -18,14 +18,16 @@ class NoticeController extends Controller
     public function index()
     {
 
-        $userId = Auth::user()->id;
-        $user = User::findOrFail($userId);
+       $user = Auth::user();
 
         if (!$user->isAdmin()) {
             return response()->json([
                 'message' => 'are not admin'
             ], 403);
         }
+        // if ($user->role !== 'admin') {
+        //     return response()->json(['message' => 'you are not admin'], 403);
+        // }
 
         $notices = Notice::where(function ($quary) use ($user) {
             $quary->where('type', '!=', 'personal')
@@ -62,7 +64,7 @@ class NoticeController extends Controller
         $validated = $request->validated();
         $notice = Notice::findOrFail($request->id);
         $notice->update($validated);
-        
+
         return response()->json([
             'status' => ' success',
             'message' => 'updated sucessful',
@@ -84,7 +86,7 @@ class NoticeController extends Controller
     {
         $user = Auth::user();
 
-        $personalNotices = $user->notices()->where('user_id','=',$user->id)->where('type','=','personal')->get();
+        $personalNotices = $user->notices()->where('user_id', '=', $user->id)->where('type', '=', 'personal')->get();
         return response()->json([
             'status' => 'success',
             'data' => $personalNotices

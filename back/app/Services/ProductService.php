@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Jobs\ProcessProductImageJob;
+use App\Jobs\ProcessProductVideoAndAudioJob;
 use App\Models\Product;
 use Illuminate\Support\Facades\DB;
-
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 class ProductService
 {
     public function createProduct(int $userId, array $data)
@@ -18,23 +20,28 @@ class ProductService
             $product->description = $data['description'];
             $product->stock = $data['count'];
             $tempUploads = [];
+            $mediaData = [
+                'audio_temp' => null,
+                'video_temp' => null,
+            ];
             for ($i = 1; $i <= 3; $i++) {
                 if (isset($data['image' . $i])) {
                     // 1. حفظ سريع جداً في المجلد المؤقت
                     $tempPath = saveTempFile($data['image' . $i]);
 
-                    $tempUploads['image' . $i] = $tempPath; // يمكنك وضع صورة "جاري التحميل" افتراضية
+                    $tempUploads['image' . $i] = $tempPath;
                     // 2. تعيين قيمة مبدئية لكي لا يبقى الحقل فارغاً
                     $product->{'image' . $i} = 'processing.png';
                 }
             }
-            if ($data['audio']) {
-                $fileName = saveFile($data['audio'], 'audioInst');
-                $product->audio = $fileName;
+            if (isset($data['audio']) && $data['audio']) {
+                // حفظ سريع في مجلد مؤقت
+                $mediaData['audio_temp'] = saveFile($data['audio'], 'temp_media');
             }
-            if ($data['video']) {
-                $videoPath = saveFile($data['video'], 'vedioInst');
-                $product->video = $videoPath;
+
+            if (isset($data['video']) && $data['video']) {
+                // حفظ سريع في مجلد مؤقت
+                $mediaData['video_temp'] = saveFile($data['video'], 'temp_media');
             }
 
             $product->is_for_sale = $data['is_for_sale'] ?? false;
@@ -46,19 +53,26 @@ class ProductService
             foreach ($tempUploads as $columnName => $tempPath) {
                 ProcessProductImageJob::dispatch($tempPath, $product->id, $columnName);
             }
+            if ($mediaData['audio_temp'] || $mediaData['video_temp']) {
+                ProcessProductVideoAndAudioJob::dispatch($product->id, $mediaData);
+            } //ffmpeg
             // create product items for rent
-            if ($data['is_for_rent']) {
+            if ($data['is_for_rent'] && $data['count'] > 0) {
+                $itemsData = [];
+                $now = Carbon::now(); 
                 for ($i = 0; $i < $data['count']; $i++) {
-                    $p = $product->items()->create([
-                        'serial_number' => rand(1, 999999),
-                        'condition' => $data['condition'],
-                        'status' => 'active',
-                    ]);
-
-                    $p->update([
-                        'serial_number' => $p->id
-                    ]);
+                    $itemsData[] = [
+                        'product_id'    => $product->id,
+                        'serial_number' => 'SN-' . strtoupper(Str::random(8)) . '-' . rand(1000, 9999),
+                        'condition'     => $data['condition'],
+                        'status'        => 'active',
+                        'created_at'    => $now,
+                        'updated_at'    => $now,
+                    ];
                 }
+
+                // إدخال جميع القطع في قاعدة البيانات باستعلام واحد فقط (Bulk Insert)
+                \App\Models\ProductItem::insert($itemsData);
             }
             return $product;
         });

@@ -19,6 +19,6 @@ class AdminMiddleware
         $user = Auth::user();
         if ($user->role ==='admin')
         {return $next($request);}
-    return response()->json(['message' =>'you are not admin'], 404);
+    return response()->json(['message' =>'you are not admin'], 404);//403
 }
 }
