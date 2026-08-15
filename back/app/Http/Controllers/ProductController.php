@@ -6,6 +6,7 @@ use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductRentalResource;
 use App\Http\Resources\ProductSaleResource;
 use App\Models\Product;
+use App\Http\Resources\productAdmin;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,9 +24,14 @@ class ProductController extends Controller
     public function create(ProductRequest $request)
     {
         $data = $request->validated();
-        $userId = Auth::user()->id;
-        // create product
-        $product = $this->productService->createProduct($userId, $data);
+        // 1. جلب المستخدم الحالي
+        $user = Auth::user(); 
+        
+        // 2. التحقق من الصلاحية: إذا كان أدمن يتم التفعيل فوراً، وإلا يحتاج لموافقة
+        $data['is_active'] = ($user->role === 'admin');
+
+        // 3. إنشاء المنتج عبر تمرير معرف المستخدم والبيانات
+        $product = $this->productService->createProduct($user->id, $data);
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
@@ -48,4 +54,16 @@ class ProductController extends Controller
         }])->where('is_for_rent', true)->where('is_active', true)->get();
         return ProductRentalResource::collection($products);
     } //$products = Product::with(['items', 'owner'])
+
+    public function viewProductsForAdmin()
+    {
+        $allproduct = Product::with(['items', 'owner']) 
+            ->whereHas('owner', function ($query) {
+                $query->where('role', 'admin');
+            })
+            ->where('is_active', true) 
+            ->get();
+
+        return productAdmin::collection($allproduct);
+    }
 }

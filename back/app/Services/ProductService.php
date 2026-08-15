@@ -19,6 +19,7 @@ class ProductService
             $product->title = $data['title'];
             $product->description = $data['description'];
             $product->stock = $data['count'];
+            $product->condition = $data['condition'];
             $tempUploads = [];
             $mediaData = [
                 'audio_temp' => null,
@@ -48,6 +49,7 @@ class ProductService
             $product->sale_price = $data['sale_price'] ?? 0;
             $product->is_for_rent = $data['is_for_rent'] ?? false;
             $product->rent_price_daily = $data['rent_price_daily'] ?? 0;
+            $product->is_active = $data['is_active'] ?? false;
             $product->save();
 
             foreach ($tempUploads as $columnName => $tempPath) {

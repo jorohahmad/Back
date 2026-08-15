@@ -25,7 +25,7 @@ Route::post('verification2',[UserController::class,'Verification2'])->middleware
 Route::post('verification3',[UserController::class,'AccountVerification'])->middleware('auth:sanctum');
 
 Route::post('password/forget', [UserController::class, 'forgetPassword'])->middleware('throttle:3,1');
-Route::post('password/verify-code', [UserController::class, 'verifyResetCode']); // 👈 المسار الجديد
+Route::post('password/verify-code', [UserController::class, 'verifyResetCode']);  
 Route::post('password/reset', [UserController::class, 'resetPassword']);
 Route::post('password/change', [UserController::class, 'changePassword'])->middleware('auth:sanctum');
 //
@@ -87,6 +87,7 @@ Route::get('admin/product/index' ,[adminProductController::class,'index'])->midd
 Route::get('admin/dashboard/card3',[DashboardController::class,'getStats'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/dashboard/card1',[DashboardController::class,'getSupplyDemandRatio'])->middleware(['auth:sanctum','admin']); 
 Route::get('admin/dashboard/performance_summary',[DashboardController::class,'getWeeklyPerformance'])->middleware(['auth:sanctum','admin']); 
+Route::get('admin/product/view',[ProductController::class,'viewProductsForAdmin'])->middleware(['auth:sanctum','admin']);
 
 // الرسم البياني الشريطي (الاقسام الاكثر مبيعا و الاقسام الاكثر تأجيرا)
 Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachines'])->middleware(['auth:sanctum', 'admin']);
