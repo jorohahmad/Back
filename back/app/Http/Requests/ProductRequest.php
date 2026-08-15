@@ -40,18 +40,5 @@ class ProductRequest extends FormRequest
             'repricing' => 'boolean'
         ];
     }
-    public function messages()
-    {
-        return [
-            'title.required' => 'حقل العنوان مطلوب.',
-            'description.required' => 'حقل الوصف مطلوب.',
-            'sale_price.required_if' => 'حقل سعر البيع مطلوب عندما يكون المنتج للبيع.',
-            'rent_price_daily.required_if' => 'حقل سعر الإيجار اليومي مطلوب عندما يكون المنتج للإيجار.',
-            'count.required' => 'حقل الكمية مطلوب.',
-            'count.integer' => 'حقل الكمية يجب أن يكون عدداً صحيحاً.',
-            'count.min' => 'الكمية يجب أن تكون على الأقل 1.',
-            'condition.required' => 'حقل الحالة مطلوب.',
-            'condition.in' => 'حقل الحالة يجب أن يكون إما "new" أو "used".',
-        ];
-    }
+    
 }

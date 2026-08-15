@@ -66,6 +66,8 @@ class ReceiptService
             'items'       => $items->map(function ($item) {
                 return [
                     'product_name' => $item->product->title ?? 'منتج غير معروف',
+                    'product_image' => $item->product->image1 ? asset('storage/' . $item->product->image1) : null,
+                    'user_name'    => $item->product->owner->name ?? 'مستخدم غير معروف',
                     'quantity'     => $item->quantity,
                     'unit_price'   => $item->unit_price,
                 ];
@@ -92,6 +94,8 @@ class ReceiptService
                 return [
                     // الانتباه هنا أيضاً لسلسلة العلاقات لتجنب أخطاء null أخرى
                     'product_name' => $item->productItem->product->title ?? 'عنصر غير معروف',
+                    'product_image' => $item->productItem->product->image1 ? asset('storage/' . $item->productItem->product->image1) : null,
+                    'user_name'    => $item->lessor->name ?? 'مستخدم غير معروف',
                     'rent_days'    => $item->rent_days,
                     'start_date'   => $item->start_date,
                     'end_date'     => $item->end_date,

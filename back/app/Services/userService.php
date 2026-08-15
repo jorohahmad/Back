@@ -7,7 +7,7 @@ use App\Models\OrderItem;
 use App\Models\RentalItem;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-
+use App\Models\Rating;
 class UserService
 {
     /**
@@ -23,6 +23,7 @@ class UserService
                 ->where('is_active', true)
                 ->where('delated', false);
         }]);
+        $seller->loadAvg('receivedRatings', 'score');
 
         return $seller;
     }
@@ -92,5 +93,24 @@ class UserService
         } else {
             return 'خبير';
         }
+    }
+
+    //Rating
+    public function rateUser( User $rater, User $rated, int $score, ?string $comment = null)
+    {
+        if ($rater->id === $rated->id) {
+            throw new \Exception(__('messages.cannot_rate_self'));
+        }
+
+        return Rating::updateOrCreate(
+            [
+                'rater_id' => $rater->id,
+                'rated_id' => $rated->id,
+            ],
+            [
+                'score'   => $score,
+                'comment' => $comment,
+            ]
+        );
     }
 }

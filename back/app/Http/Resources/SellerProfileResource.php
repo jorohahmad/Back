@@ -16,8 +16,6 @@ class SellerProfileResource extends JsonResource
     {
         return [
             'seller_info' => new UsersResource($this), // معلومات البائع مع التقييم
-            
-            // إرجاع جميع المنتجات في مصفوفة واحدة موحدة
             'products' => ProductResource::collection($this->products),
         ];
     }

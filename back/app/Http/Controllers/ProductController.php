@@ -33,7 +33,7 @@ class ProductController extends Controller
         // 3. إنشاء المنتج عبر تمرير معرف المستخدم والبيانات
         $product = $this->productService->createProduct($user->id, $data);
         return response()->json([
-            'message' => 'Product created successfully',
+            'message' => __('messages.product_created_successfully'),
             'product' => $product,
         ], 201);
     }

@@ -18,7 +18,7 @@ class FavoriteResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'image' => asset('storage/' . $this->image1),
-            'price' => $this->sale_price,
+            'price' => $this->sale_price ?: $this->rent_price_daily,
         ];
     }
 }

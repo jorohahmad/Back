@@ -17,4 +17,12 @@ class RentalItem extends Model
     {
         return $this->belongsTo(ProductItem::class, 'product_item_id');
     }
+    public function rental()
+    {
+        return $this->belongsTo(Rental::class, 'rental_id');
+    }
+    public function lessor()
+    {
+        return $this->belongsTo(User::class, 'lessor_id');
+    }
 }

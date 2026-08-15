@@ -107,7 +107,7 @@ class adminController extends Controller
     // all users in application
     public function indexUsers()
     {
-        $allUsers  = User::where('role', 'user')->get();
+        $allUsers  = User::all();
         return UsersResource::collection($allUsers);
     }
 

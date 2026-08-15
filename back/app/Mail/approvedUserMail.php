@@ -28,7 +28,7 @@ class approvedUserMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Approved Mail',
+            subject: __('messages.approved_subject') ?? 'Approved Mail',
         );
     }
 

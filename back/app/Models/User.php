@@ -51,7 +51,7 @@ class User extends Authenticatable
     //ارجاع الطلبات التي كان فيها البائع
     public function sales()
     {
-        return $this->hasMany(Order::class, 'seller_id');
+        return $this->hasMany(OrderItem::class, 'seller_id');
     }
     //ارجاع الطلبات التي كان فيها المشتري
     public function purchases()
@@ -61,25 +61,31 @@ class User extends Authenticatable
     //  الإيجارات الصادرة (هو المؤجر/المالك)
     public function rentalsOut()
     {
-        return $this->hasMany(Rental::class, 'lessor_id');
+        return $this->hasMany(RentalItem::class, 'lessor_id');
     }
     // الإيجارات الواردة (هو المستأجر)
     public function rentalsIn()
     {
         return $this->hasMany(Rental::class, 'renter_id');
     }
-        // السلة
+    // السلة
     public function cartItems()
     {
         return $this->hasMany(Cart::class);
     }
     //الملاحظات للاادمن
-    public function notices(){
-        return $this->hasMany(Notice::class,'user_id');
+    public function notices()
+    {
+        return $this->hasMany(Notice::class, 'user_id');
     }
     //
     public function favorites()
     {
         return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id')->withTimestamps();
+    }
+    //Rating
+    public function receivedRatings()
+    {
+        return $this->hasMany(Rating::class, 'rated_id');
     }
 }

@@ -66,6 +66,7 @@ Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:
 
 Route::get('seller/{seller}/profile', [UserController::class, 'getSellerProfile'])->middleware('auth:sanctum');
 Route::get('seller/my-stats', [UserController::class, 'getMyStats'])->middleware('auth:sanctum');
+Route::post('seller/{seller}/rate', [UserController::class, 'rateSeller'])->middleware('auth:sanctum');
 
 Route::post('Cart/add',[CartController::class,'addToCart'])->middleware(['auth:sanctum','active']);
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');

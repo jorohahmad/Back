@@ -18,6 +18,8 @@ class UsersResource extends JsonResource
             'id'=>$this->id,
             'name'=>$this->name,
             'email'=>$this->email,
+            'role'=>$this->role,
+            'rating' => round($this->received_ratings_avg_score ?? 0, 1),
             'image'=>asset('storage/' . $this->imagePersonal)
         ];
     }

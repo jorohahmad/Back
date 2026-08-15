@@ -243,7 +243,7 @@ class CartService
                 }
             } elseif ($action === 'decrease') {
                 // التأكد من أن المستخدم لا يحاول حذف كل شيء (يجب بقاء سطر واحد على الأقل)
-                if (count($cartIds) > $steps) {
+                if (count($cartIds) >= $steps) {
                     // نقتطع آخر IDs من المصفوفة بمقدار عدد الضغطات لنحذفها
                     $idsToDelete = array_slice($cartIds, -$steps);
                     Cart::whereIn('id', $idsToDelete)->where('user_id', $userId)->delete();

@@ -30,15 +30,5 @@ class UpdateCart extends FormRequest
         ];
     }
 
-    public function messages()
-    {
-        return [
-            'cart_ids.required'   => 'يجب تحديد عنصر واحد على الأقل في السلة.',
-            'cart_ids.array'      => 'صيغة المعرفات غير صحيحة.',
-            'cart_ids.*.exists'   => 'أحد العناصر المحددة غير موجود في سلتك.',
-            'action.required'     => 'يجب تحديد نوع العملية (زيادة أو نقصان).',
-            'action.in'           => 'العملية المحددة غير صالحة.',
-            'steps.min'           => 'عدد الخطوات يجب أن يكون 1 على الأقل.',
-        ];
-    }
+    
 }

@@ -28,7 +28,7 @@ class rejectedUserMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Rejected Mail',
+            subject: __('messages.rejected_subject') ?? 'Rejected Mail',
         );
     }
 
