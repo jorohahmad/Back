@@ -7,4 +7,5 @@ use Illuminate\Support\Facades\Schedule;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
-Schedule::command('rentals:check-expired')->everyMinute();
+Schedule::command('rentals:check-expired')->daily();
+Schedule::command('carts:clear-abandoned')->hourly();

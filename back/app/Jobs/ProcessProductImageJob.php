@@ -40,7 +40,7 @@ class ProcessProductImageJob implements ShouldQueue
         $rawFilePath = Storage::disk('local')->path($this->tempPath);
 
         // 2. تجهيز اسم ومسار الملف النهائي في الـ Public
-        $finalFileName = time() . '_' . rand(1, 1000) . '.webp'; // صيغة webp ممتازة للضغط
+        $finalFileName = time() . '_' . rand(1, 1000) . '.webp'; 
         $finalFolder = 'imageInst';
         $finalPath = storage_path('app/public/' . $finalFolder . '/' . $finalFileName);
 

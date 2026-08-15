@@ -15,24 +15,17 @@ class NoticeController extends Controller
 {
     use AuthorizesRequests;
     // عرض كل الملاحظات التي تنطبق عليها الشروط المطلوبة
-    public function index(Request $request)
-{
-    // 1. جلب المستخدم الحالي بشكل آمن عبر Sanctum
-    $user = $request->user();
+    public function index()
+    {
 
-    // حماية إضافية في حال مر الطلب بدون مستخدم
-    if (!$user) {
-        return response()->json([
-            'message' => 'Unauthenticated'
-        ], 401);
-    }
+        $userId = Auth::user()->id;
+        $user = User::findOrFail($userId);
 
-    // 2. فحص الصلاحيات (مع التأكد أن الدالة موجودة فعلاً في المودل لتجنب الخطأ 500)
-    if (!method_exists($user, 'isAdmin') || !$user->isAdmin()) {
-        return response()->json([
-            'message' => 'You are not admin'
-        ], 403);
-    }
+        if (!$user->isAdmin()) {
+            return response()->json([
+                'message' => 'are not admin'
+            ], 403);
+        }
 
     // 3. جلب البيانات
     $notices = Notice::where(function ($query) use ($user) {
@@ -69,7 +62,7 @@ class NoticeController extends Controller
         $validated = $request->validated();
         $notice = Notice::findOrFail($request->id);
         $notice->update($validated);
-        
+
         return response()->json([
             'status' => ' success',
             'message' => 'updated sucessful',
@@ -91,7 +84,7 @@ class NoticeController extends Controller
     {
         $user = Auth::user();
 
-        $personalNotices = $user->notices()->where('user_id','=',$user->id)->where('type','=','personal')->get();
+        $personalNotices = $user->notices()->where('user_id', '=', $user->id)->where('type', '=', 'personal')->get();
         return response()->json([
             'status' => 'success',
             'data' => $personalNotices
