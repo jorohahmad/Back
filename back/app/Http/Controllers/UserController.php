@@ -4,12 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\FavoriteResource;
 use App\Http\Resources\UsersResource;
+use App\Http\Resources\SellerProfileResource;
 use App\Mail\AcceptMail;
 use App\Mail\RegisterMail;
 use App\Mail\ForgetPasswordMail;
 use App\Mail\VerificationMail;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\UserService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,6 +21,12 @@ use Laravel\Socialite\Facades\Socialite;
 
 class UserController extends Controller
 {
+    protected $userService;
+
+    public function __construct(UserService $userService)
+    {
+        $this->userService = $userService;
+    }
     function register(Request $request)
     {
         $request->validate([
@@ -60,13 +68,7 @@ class UserController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        //  Mail::to($user->email)->queue(new AcceptMail($user));
-        //اذا  الادمن وافق او لا
-        // if ($user->active == "0") {
-        //     return response()->json([
-        //         'message' => 'Your account is not active yet. Please wait for admin approval.',
-        //     ], 403);
-        // }
+
         $user['imagePersonal'] = asset('storage/' . $user->imagePersonal);
         $user['imageId'] = asset('storage/' . $user->imageId);
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -141,13 +143,13 @@ class UserController extends Controller
             }
 
             // الحالة الثانية: الحساب قديم، لكن الإدمن لم يوافق عليه بعد (أو قام بحظره)
-            if (!$user->active) {
-                return response()->json([
-                    'success' => false,
-                    'status' => 'pending',
-                    'message' => 'حسابك لا يزال قيد المراجعة أو تم إيقافه من قبل الإدارة.'
-                ], 403);
-            }
+            // if (!$user->active) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'status' => 'pending',
+            //         'message' => 'حسابك لا يزال قيد المراجعة أو تم إيقافه من قبل الإدارة.'
+            //     ], 403);
+            // }
 
             // الحالة الثالثة: الحساب قديم وتمت الموافقة عليه من الإدمن (تسجيل دخول ناجح)
             $authToken = $user->createToken('MobileAppAuthToken')->plainTextToken;
@@ -325,6 +327,32 @@ class UserController extends Controller
 
         return response()->json([
             'message' => 'تم تحديث كلمة المرور بنجاح.'
+        ], 200);
+    }
+
+    public function getSellerProfile(User $seller)
+    {
+        // 1. تمرير البائع للـ Service لجلب بياناته ومنتجاته
+        $sellerData = $this->userService->getSellerWithActiveProducts($seller);
+
+        // 2. تمرير النتيجة للـ Resource لتنسيقها وإرجاعها
+        return response()->json([
+            'status' => 'success',
+            'data'   => new SellerProfileResource($sellerData)
+        ], 200);
+    }
+
+    public function getMyStats(Request $request)
+    {
+        // نجلب المستخدم الحالي صاحب الـ Token
+        $seller = $request->user(); 
+
+        // نمرر المستخدم لطبقة الخدمات لإجراء الحسابات
+        $stats = $this->userService->getSellerStats($seller);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $stats
         ], 200);
     }
 }

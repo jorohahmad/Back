@@ -29,7 +29,7 @@ Route::post('password/verify-code', [UserController::class, 'verifyResetCode']);
 Route::post('password/reset', [UserController::class, 'resetPassword']);
 Route::post('password/change', [UserController::class, 'changePassword'])->middleware('auth:sanctum');
 //
-Route::post('create-product',[ProductController::class,'create'])->middleware('auth:sanctum');
+Route::post('create-product',[ProductController::class,'create'])->middleware(['auth:sanctum','active']);
 Route::get('products-for-sale',[ProductController::class,'indexForSale'])->middleware('auth:sanctum');
 Route::get('products-for-rent',[ProductController::class,'indexForRent'])->middleware('auth:sanctum');
 
@@ -64,15 +64,16 @@ Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middlewar
 Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
 Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
 
+Route::get('seller/{seller}/profile', [UserController::class, 'getSellerProfile'])->middleware('auth:sanctum');
+Route::get('seller/my-stats', [UserController::class, 'getMyStats'])->middleware('auth:sanctum');
 
-
-Route::post('Cart/add',[CartController::class,'addToCart'])->middleware('auth:sanctum');
+Route::post('Cart/add',[CartController::class,'addToCart'])->middleware(['auth:sanctum','active']);
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
-Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware('auth:sanctum');
-Route::patch('Cart/update', [CartController::class, 'updateQuantity'])->middleware('auth:sanctum');
-Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware('auth:sanctum');
-Route::get('receipts', [CartController::class, 'getUserReceipts'])->middleware('auth:sanctum');
-Route::get('receipts/{transaction_id}', [CartController::class, 'getReceiptByTransactionId'])->middleware('auth:sanctum');
+Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware(['auth:sanctum','active']);
+Route::patch('Cart/update', [CartController::class, 'updateQuantity'])->middleware(['auth:sanctum','active']);
+Route::post('Cart/checkout',[CartController::class,'checkout'])->middleware(['auth:sanctum','active']);
+Route::get('receipts', [CartController::class, 'getUserReceipts'])->middleware(['auth:sanctum','active']);
+Route::get('receipts/{transaction_id}', [CartController::class, 'getReceiptByTransactionId'])->middleware(['auth:sanctum','active']);
 Route::get('/j', function () {
     // إطلاق الحدث وإرسال رسالة
     event(new SayHelloEvent('تم استئجار جيتار ياماها للتو!'));

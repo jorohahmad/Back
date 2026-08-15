@@ -55,6 +55,9 @@ class adminController extends Controller
         if ($user->role != 'admin') {
             return response()->json('You are not admin', 401);
         }
+        if ($user->active != '1') {
+            return response()->json('You are not admin', 401);
+        }
         $user->update([
             'key' => random_int(1000, 9999)
         ]);
@@ -170,6 +173,15 @@ class adminController extends Controller
         return response()->json('Reject Admin', 200);
     }
 
+
+
+
+
+
+
+
+
+    
     public function updateInformation(Request $request)
     {
         /** @var \App\Models\User $user */

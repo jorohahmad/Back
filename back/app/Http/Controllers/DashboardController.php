@@ -143,7 +143,7 @@ class DashboardController extends Controller
 
     private function calculateGrowthPercentage(float $current, float $previous): float
     {
-        if ($previous === 0) {
+        if ($previous == 0) {
             // إذا كانت الفترة السابقة صفر والحالية أكبر من صفر فالنمو 100%، وإلا فهو 0%
             return $current > 0 ? 100.0 : 0.0;
         }

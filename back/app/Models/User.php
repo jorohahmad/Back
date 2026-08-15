@@ -29,6 +29,7 @@ class User extends Authenticatable
         'key',
         'active',
         'is_verified',
+        'balance',
     ];
 
     protected $hidden = [
@@ -39,8 +40,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // 'email_verified_at' => 'datetime',
-            // 'password' => 'hashed',
+            'balance' => 'double', // لضمان التعامل معه كرقم عشري
         ];
     }
     // ارجاع المنتجات التي يملكها المستخدم
