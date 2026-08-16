@@ -2,25 +2,41 @@
 
 namespace App\Services;
 
-use App\Models\{Cart, Product, ProductItem, Rental, RentalItem, Order, OrderItem, PlatformEarning};
+use App\Models\{Cart, Product, ProductItem, Rental, RentalItem, Order, OrderItem, PlatformEarning, User};
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Exception;
+use App\Notifications\NewSaleNotification;
+use App\Notifications\NewRentalNotification;
 
 class CheckoutService
 {
-
     /**
      * الدالة الرئيسية التي تدير عملية الدفع بالكامل
      */
     public function processCheckout(int $userId): string
     {
         return DB::transaction(function () use ($userId) {
+            
+            // 1. 🔐 قفل سجل المشتري أولاً! (لمنع مشكلة النقر المزدوج من الموبايل)
+            $buyer = User::lockForUpdate()->find($userId);
+
+            // 2. جلب السلة بعد القفل (لكي يرى الطلب الثاني أن السلة أصبحت فارغة)
             $cartItems = Cart::with('product')->where('user_id', $userId)->get();
 
             if ($cartItems->isEmpty()) {
                 throw new Exception("السلة فارغة، لا يمكن إتمام العملية.");
             }
+
+            // 3. حساب الإجمالي الكلي للسلة
+            $rentTotal = $cartItems->where('type', 'rent')->sum(fn($item) => $item->unit_price * $item->rent_days);
+            $saleTotal = $cartItems->where('type', 'sale')->sum(fn($item) => $item->quantity * $item->unit_price);
+            $grandTotal = $rentTotal + $saleTotal;
+
+            if ($buyer->balance < $grandTotal) {
+                throw new Exception("رصيدك الحالي ({$buyer->balance}$) غير كافٍ. المطلوب: {$grandTotal}$");
+            }
+            $buyer->decrement('balance', $grandTotal);
 
             $transactionId = (string) Str::uuid();
             $rentItems = $cartItems->where('type', 'rent');
@@ -34,24 +50,22 @@ class CheckoutService
                 $this->processSales($saleItems, $userId, $transactionId);
             }
 
-            // مسح السلة بعد النجاح
+            // 4. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
             Cart::where('user_id', $userId)->delete();
 
             return $transactionId;
         });
     }
-    /**
-     * معالجة الإيجارات بشكل منفصل
-     */
+
     private function processRentals($rentItems, int $userId, string $transactionId): void
     {
         $productItemIds = $rentItems->pluck('product_item_id')->toArray();
 
+        // 🔐 قفل القطع العينية لمنع حجزها من شخصين في نفس اللحظة
         $lockedItems = ProductItem::whereIn('id', $productItemIds)->lockForUpdate()->get();
-
         foreach ($lockedItems as $lockedItem) {
             if ($lockedItem->status !== 'active') {
-                throw new Exception("عذراً، القطعة ذات الرقم التسلسلي ({$lockedItem->serial_number}) تم حجزها للتو.");
+                throw new Exception("عذراً، القطعة ({$lockedItem->serial_number}) تم حجزها للتو.");
             }
         }
 
@@ -83,17 +97,17 @@ class CheckoutService
         ProductItem::whereIn('id', $productItemIds)->update(['status' => 'rented']);
 
         $this->recordCommission($rental->id, null, $totalRentPrice, 'rental');
+        
+        // 💰 توزيع الأرباح الصافية على أصحاب الآلات (المؤجرين)
+        $this->distributeEarningsToSellers($rentItems, 'rent', $rental->id);
     }
 
-    /**
-     * معالجة المشتريات بشكل منفصل
-     */
     private function processSales($saleItems, int $userId, string $transactionId): void
     {
         $productIds = $saleItems->pluck('product_id')->unique()->toArray();
 
+        // 🔐 قفل المنتجات لمنع تضارب المخزون
         $lockedProducts = Product::whereIn('id', $productIds)->lockForUpdate()->get();
-
         foreach ($lockedProducts as $lockedProduct) {
             $requestedQuantity = $saleItems->where('product_id', $lockedProduct->id)->sum('quantity');
             if ($lockedProduct->stock < $requestedQuantity) {
@@ -130,10 +144,11 @@ class CheckoutService
         }
 
         $this->recordCommission(null, $order->id, $totalSalePrice, 'sale');
+        
+        // 💰 توزيع الأرباح الصافية على البائعين
+        $this->distributeEarningsToSellers($saleItems, 'sale', $order->id);
     }
-    /**
-     * دالة مساعدة لتسجيل العمولات (DRY Principle)
-     */
+
     private function recordCommission(?int $rentalId, ?int $orderId, float $amount, string $type): void
     {
         PlatformEarning::create([
@@ -143,5 +158,45 @@ class CheckoutService
             'commission_amount'  => $amount * 0.02,
             'type'               => $type,
         ]);
+    }
+
+    /**
+     * دالة مساعدة لتجميع وتوزيع الأرباح الصافية على أصحاب المنتجات وإرسال الإشعارات
+     */
+    private function distributeEarningsToSellers($items, string $type, int $modelId): void
+    {
+        $sellerEarnings = [];
+
+        foreach ($items as $item) {
+            $ownerId = $item->product->owner_id;
+            
+            $itemTotal = $type === 'sale' 
+                ? $item->quantity * $item->unit_price 
+                : $item->unit_price * $item->rent_days;
+                
+            $netAmount = $itemTotal * 0.98; 
+
+            if (!isset($sellerEarnings[$ownerId])) {
+                $sellerEarnings[$ownerId] = 0;
+            }
+            $sellerEarnings[$ownerId] += $netAmount;
+        }
+
+        foreach ($sellerEarnings as $sellerId => $netAmount) {
+            // جلب البائع
+            $seller = User::find($sellerId);
+            
+            if ($seller) {
+                // 1. زيادة الرصيد
+                $seller->increment('balance', $netAmount);
+                
+                // 2. 🔔 إرسال الإشعار اللحظي لقاعدة بيانات البائع
+                if ($type === 'sale') {
+                    $seller->notify(new NewSaleNotification($modelId, $netAmount));
+                } elseif ($type === 'rent') {
+                    $seller->notify(new NewRentalNotification($modelId, $netAmount));
+                }
+            }
+        }
     }
 }

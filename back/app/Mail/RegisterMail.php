@@ -20,7 +20,7 @@ class RegisterMail extends Mailable implements ShouldQueue
     public $name;
     public function __construct($name)
     {
-        $this->name=$name;
+        $this->name = $name;
     }
 
     /**
@@ -29,7 +29,7 @@ class RegisterMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Welcome to the SwiftCart application',
+            subject: __('messages.welcome_subject') ?? 'Welcome to the SwiftCart application',
         );
     }
 

@@ -8,6 +8,6 @@
 </head>
 <body>
 <h2>Hi, {{ $name }}! &#128525;</h2>
-<p>Your request has been registered.you will receive a message when the admin accepts or rejects your request.</p>
+<p>Your request has been registered.</p>
 </body>
 </html>

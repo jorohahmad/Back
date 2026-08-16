@@ -41,17 +41,17 @@ class CartController extends Controller
     {
         try {
             $userId = Auth::user()->id;
-           $transactionId = $this->checkoutService->processCheckout($userId);
+            $transactionId = $this->checkoutService->processCheckout($userId);
 
             return response()->json([
                 'status'         => 'success',
                 'transaction_id' => $transactionId,
-                'message'        => 'تمت عملية الدفع وتوثيق العقود والعمولات بنجاح فائق!'
+                'message'        => __('messages.checkout_successful')
             ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'حدث خطأ أثناء عملية الدفع.',
+                'message' => __('messages.checkout_error'),
                 'error'   => $e->getMessage()
             ], 400);
         }
@@ -65,7 +65,7 @@ class CartController extends Controller
             $this->cartService->addToCart($userId, $validated);
             return response()->json([
                 'status'  => 'success',
-                'message' => 'تمت إضافة العنصر إلى السلة بنجاح.'
+                'message' => __('messages.added_to_cart_successfully')
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -84,7 +84,7 @@ class CartController extends Controller
             if (empty($cartData['items'])) {
                 return response()->json([
                     'status'  => 'success',
-                    'message' => 'السلة فارغة حالياً.',
+                    'message'     => __('messages.cart_is_empty'),
                     'data'    => [],
                     'grand_total' => doubleval(0)
                 ], 200);
@@ -97,7 +97,7 @@ class CartController extends Controller
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'حدث خطأ أثناء جلب محتويات السلة',
+                'message' => __('messages.error_fetching_cart'),
                 'error'   => $e->getMessage()
             ], 500);
         }
@@ -115,19 +115,19 @@ class CartController extends Controller
             if ($deletedCount === 0) {
                 return response()->json([
                     'status'  => 'error',
-                    'message' => 'لم يتم العثور على العناصر أو أنك لا تملك صلاحية حذفها.'
+                    'message' => __('messages.items_not_found_or_unauthorized')
                 ], 404);
             }
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'تم حذف العناصر من السلة بنجاح.',
+                'message'       => __('messages.items_deleted_from_cart'),
                 'deleted_count' => $deletedCount
             ], 204);
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'حدث خطأ أثناء محاولة الحذف من السلة.',
+                'message' => __('messages.error_deleting_from_cart'),
                 'error'   => $e->getMessage()
             ], 500);
         }
@@ -148,7 +148,7 @@ class CartController extends Controller
             );
             return response()->json([
                 'status'  => 'success',
-                'message' => 'تم تحديث الكمية بنجاح.'
+                'message' => __('messages.quantity_updated_successfully')
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -193,11 +193,10 @@ class CartController extends Controller
                 'status' => 'success',
                 'data'   => $receipts
             ], 200);
-
         } catch (Exception $e) {
             return response()->json([
                 'status'  => 'error',
-                'message' => 'حدث خطأ أثناء جلب الإيصالات.',
+                'message' => __('messages.error_fetching_receipts'),
                 'error'   => $e->getMessage()
             ], 500);
         }

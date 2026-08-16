@@ -24,7 +24,13 @@ class productAdmin extends JsonResource
             ->map(fn($img) => asset('storage/' . $img))
             ->values()
             ->toArray(),
-            'videoUrl' =>$this->video ? asset('storage/' . $this->video) : null
+            'videoUrl' =>$this->video ? asset('storage/' . $this->video) : null,
+            'condition'=>$this->condition,
+            'stock'=>$this->stock,
+            'isSale'=>$this->is_for_sale,
+            'isRent'=>$this->is_for_rent,
+            'salePrice'=>$this->sale_price,
+            'rentPrice'=>$this->rent_price,
         ];
     }
 }

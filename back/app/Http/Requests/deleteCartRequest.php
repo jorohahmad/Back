@@ -28,15 +28,5 @@ class deleteCartRequest extends FormRequest
         ];
     }
 
-    public function messages()
-    {
-        return [
-            'cart_ids.required' => 'Cart IDs are required.',
-            'cart_ids.array' => 'Cart IDs must be an array.',
-            'cart_ids.min' => 'At least one Cart ID must be provided.',
-            'cart_ids.*.required' => 'Each Cart ID is required.',
-            'cart_ids.*.integer' => 'Each Cart ID must be an integer.',
-            'cart_ids.*.exists' => 'One or more of the specified Cart IDs do not exist.',
-        ];
-    }
+    
 }

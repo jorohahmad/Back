@@ -32,13 +32,5 @@ class StoreNoticeRequest extends FormRequest
         ];
     }
 
-    #[Override]
-    public function messages():array
-    {
-        return [
-            'title.required' =>'the title is required',
-            'type.in' =>'the type must be in archive, project,personal or urgent',
-            'due_date.after_or_equal' => 'the date must be in the future'
-        ];
-    }
+    
 }

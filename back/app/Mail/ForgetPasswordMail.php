@@ -28,7 +28,7 @@ class ForgetPasswordMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Forget Password Mail',
+            subject: __('messages.forget_password_subject') ?? 'Forget Password Mail',
         );
     }
 

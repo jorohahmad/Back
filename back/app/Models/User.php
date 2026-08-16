@@ -29,6 +29,7 @@ class User extends Authenticatable
         'key',
         'active',
         'is_verified',
+        'balance',
     ];
 
     protected $hidden = [
@@ -39,8 +40,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // 'email_verified_at' => 'datetime',
-            // 'password' => 'hashed',
+            'balance' => 'double', // لضمان التعامل معه كرقم عشري
         ];
     }
     // ارجاع المنتجات التي يملكها المستخدم
@@ -51,7 +51,7 @@ class User extends Authenticatable
     //ارجاع الطلبات التي كان فيها البائع
     public function sales()
     {
-        return $this->hasMany(Order::class, 'seller_id');
+        return $this->hasMany(OrderItem::class, 'seller_id');
     }
     //ارجاع الطلبات التي كان فيها المشتري
     public function purchases()
@@ -61,27 +61,29 @@ class User extends Authenticatable
     //  الإيجارات الصادرة (هو المؤجر/المالك)
     public function rentalsOut()
     {
-        return $this->hasMany(Rental::class, 'lessor_id');
+        return $this->hasMany(RentalItem::class, 'lessor_id');
     }
     // الإيجارات الواردة (هو المستأجر)
     public function rentalsIn()
     {
         return $this->hasMany(Rental::class, 'renter_id');
     }
-        // السلة
+    // السلة
     public function cartItems()
     {
         return $this->hasMany(Cart::class);
     }
     //الملاحظات للاادمن
-    public function notices(){
-        return $this->hasMany(Notice::class,'user_id');
+    public function notices()
+    {
+        return $this->hasMany(Notice::class, 'user_id');
     }
     //
     public function favorites()
     {
         return $this->belongsToMany(Product::class, 'favorites', 'user_id', 'product_id')->withTimestamps();
     }
+<<<<<<< HEAD
     public function isAdmin()
 {
     // افترض أن لديك عمود اسمه 'role' وقيمته 'admin' للمدير
@@ -90,4 +92,11 @@ class User extends Authenticatable
     // أو إذا كان لديك عمود boolean اسمه 'is_admin'
     // return $this->is_admin == 1; 
 }
+=======
+    //Rating
+    public function receivedRatings()
+    {
+        return $this->hasMany(Rating::class, 'rated_id');
+    }
+>>>>>>> 47d4fa70b2c4d136979e73c48a29781e37f02a5c
 }

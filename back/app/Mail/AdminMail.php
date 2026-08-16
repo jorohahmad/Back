@@ -28,7 +28,7 @@ class AdminMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Validate Key',
+            subject: __('messages.admin_validate_subject') ?? 'Validate Key',
         );
     }
 

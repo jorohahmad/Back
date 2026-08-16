@@ -28,7 +28,7 @@ class AcceptMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Accept Mail',
+            subject: __('messages.accept_subject') ?? 'Accept Mail',
         );
     }
 

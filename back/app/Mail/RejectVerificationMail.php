@@ -28,10 +28,9 @@ class RejectVerificationMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Reject Verification Mail',
+            subject: __('messages.reject_verification_subject') ?? 'Reject Verification Mail',
         );
     }
-
     /**
      * Get the message content definition.
      */

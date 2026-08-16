@@ -22,6 +22,7 @@ return new class extends Migration
             $table->string('image3')->nullable();
             $table->string('audio')->nullable();
             $table->string('video')->nullable();
+            $table->enum('condition', ['used', 'new'])->default('new');
             $table->boolean('is_for_sale')->default(false);
             $table->decimal('sale_price',8,2)->nullable();
             $table->boolean('is_for_rent')->default(false);
