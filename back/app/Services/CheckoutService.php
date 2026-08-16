@@ -6,6 +6,8 @@ use App\Models\{Cart, Product, ProductItem, Rental, RentalItem, Order, OrderItem
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Exception;
+use App\Notifications\NewSaleNotification;
+use App\Notifications\NewRentalNotification;
 
 class CheckoutService
 {
@@ -14,25 +16,27 @@ class CheckoutService
      */
     public function processCheckout(int $userId): string
     {
-        // استخدام Transaction لضمان أنه إذا فشل أي جزء، تتراجع كل العمليات المالية
         return DB::transaction(function () use ($userId) {
+            
+            // 1. 🔐 قفل سجل المشتري أولاً! (لمنع مشكلة النقر المزدوج من الموبايل)
+            $buyer = User::lockForUpdate()->find($userId);
+
+            // 2. جلب السلة بعد القفل (لكي يرى الطلب الثاني أن السلة أصبحت فارغة)
             $cartItems = Cart::with('product')->where('user_id', $userId)->get();
 
             if ($cartItems->isEmpty()) {
                 throw new Exception("السلة فارغة، لا يمكن إتمام العملية.");
             }
 
-            // 1. حساب الإجمالي الكلي للسلة (بيع + إيجار)
+            // 3. حساب الإجمالي الكلي للسلة
             $rentTotal = $cartItems->where('type', 'rent')->sum(fn($item) => $item->unit_price * $item->rent_days);
             $saleTotal = $cartItems->where('type', 'sale')->sum(fn($item) => $item->quantity * $item->unit_price);
             $grandTotal = $rentTotal + $saleTotal;
 
-            // 2. 🔐 قفل سجل المشتري (Pessimistic Locking) لمنع الشراء المزدوج وسحب الرصيد
-            $buyer = User::lockForUpdate()->find($userId);
             if ($buyer->balance < $grandTotal) {
                 throw new Exception("رصيدك الحالي ({$buyer->balance}$) غير كافٍ. المطلوب: {$grandTotal}$");
             }
-            $buyer->decrement('balance', $grandTotal); // خصم المبلغ من المشتري
+            $buyer->decrement('balance', $grandTotal);
 
             $transactionId = (string) Str::uuid();
             $rentItems = $cartItems->where('type', 'rent');
@@ -46,7 +50,7 @@ class CheckoutService
                 $this->processSales($saleItems, $userId, $transactionId);
             }
 
-            // 3. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
+            // 4. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
             Cart::where('user_id', $userId)->delete();
 
             return $transactionId;
@@ -95,7 +99,7 @@ class CheckoutService
         $this->recordCommission($rental->id, null, $totalRentPrice, 'rental');
         
         // 💰 توزيع الأرباح الصافية على أصحاب الآلات (المؤجرين)
-        $this->distributeEarningsToSellers($rentItems, 'rent');
+        $this->distributeEarningsToSellers($rentItems, 'rent', $rental->id);
     }
 
     private function processSales($saleItems, int $userId, string $transactionId): void
@@ -142,7 +146,7 @@ class CheckoutService
         $this->recordCommission(null, $order->id, $totalSalePrice, 'sale');
         
         // 💰 توزيع الأرباح الصافية على البائعين
-        $this->distributeEarningsToSellers($saleItems, 'sale');
+        $this->distributeEarningsToSellers($saleItems, 'sale', $order->id);
     }
 
     private function recordCommission(?int $rentalId, ?int $orderId, float $amount, string $type): void
@@ -157,33 +161,42 @@ class CheckoutService
     }
 
     /**
-     * دالة مساعدة لتجميع وتوزيع الأرباح الصافية على أصحاب المنتجات 
-     * (Clean Code: Separation of Concerns)
+     * دالة مساعدة لتجميع وتوزيع الأرباح الصافية على أصحاب المنتجات وإرسال الإشعارات
      */
-    private function distributeEarningsToSellers($items, string $type): void
+    private function distributeEarningsToSellers($items, string $type, int $modelId): void
     {
         $sellerEarnings = [];
 
         foreach ($items as $item) {
             $ownerId = $item->product->owner_id;
-            // حساب إجمالي هذا السطر فقط
+            
             $itemTotal = $type === 'sale' 
                 ? $item->quantity * $item->unit_price 
                 : $item->unit_price * $item->rent_days;
                 
-            // حساب الصافي للبائع بعد خصم 2% عمولة المنصة
             $netAmount = $itemTotal * 0.98; 
 
-            // تجميع المبالغ إذا كان نفس البائع لديه أكثر من منتج في السلة
             if (!isset($sellerEarnings[$ownerId])) {
                 $sellerEarnings[$ownerId] = 0;
             }
             $sellerEarnings[$ownerId] += $netAmount;
         }
 
-        // إضافة المبالغ إلى محافظ البائعين باستعلام واحد لكل بائع
         foreach ($sellerEarnings as $sellerId => $netAmount) {
-            User::where('id', $sellerId)->increment('balance', $netAmount);
+            // جلب البائع
+            $seller = User::find($sellerId);
+            
+            if ($seller) {
+                // 1. زيادة الرصيد
+                $seller->increment('balance', $netAmount);
+                
+                // 2. 🔔 إرسال الإشعار اللحظي لقاعدة بيانات البائع
+                if ($type === 'sale') {
+                    $seller->notify(new NewSaleNotification($modelId, $netAmount));
+                } elseif ($type === 'rent') {
+                    $seller->notify(new NewRentalNotification($modelId, $netAmount));
+                }
+            }
         }
     }
 }

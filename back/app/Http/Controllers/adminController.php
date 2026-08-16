@@ -54,9 +54,9 @@ class adminController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         if ($user->role != 'admin') {
             return response()->json('You are not admin', 401);
-        }
-        if ($user->active != '1') {
-            return response()->json('You are not admin', 401);
+            }
+            if ($user->active != '1') {
+            return response()->json('Your account is not active yet ', 401);
         }
         $user->update([
             'key' => random_int(1000, 9999)

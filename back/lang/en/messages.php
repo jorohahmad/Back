@@ -81,4 +81,9 @@ return [
     //Rating
     'cannot_rate_self'  => 'You cannot rate yourself.',
     'rating_successful' => 'Rating submitted successfully.',
+
+    'new_sale_title'   => 'New Sale! ',
+    'new_sale_body'    => 'Your product has been sold. An amount of $:amount has been added to your balance.',
+    'new_rental_title' => 'New Rental Request! ',
+    'new_rental_body'  => 'Your instrument has been rented. An amount of $:amount has been added to your balance.',
 ];

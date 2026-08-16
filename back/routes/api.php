@@ -10,8 +10,12 @@ use App\Http\Controllers\NoticeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast; // لا تنسَ هذا في الأعلى
 
+// هذا السطر سيقوم بإنشاء مسار /api/broadcasting/auth ويحميه بالتوكن
+Broadcast::routes(['middleware' => ['auth:sanctum']]);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
@@ -102,3 +106,9 @@ Route::get('dashboard/transaction-types', [\App\Http\Controllers\DashboardContro
 //الرسم البياني
 Route::get('dashboard/revenue-chart', [\App\Http\Controllers\DashboardController::class, 'getRevenueChart'])
     ->middleware('auth:sanctum','admin');
+// مسارات الإشعارات
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
+});

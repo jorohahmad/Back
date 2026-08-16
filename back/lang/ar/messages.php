@@ -81,4 +81,10 @@ return [
     //Rating
     'cannot_rate_self'  => 'لا يمكنك تقييم نفسك.',
     'rating_successful' => 'تم إرسال التقييم بنجاح.',
+
+    //Notifications
+    'new_sale_title'   => 'مبيع جديد! ',
+    'new_sale_body'    => 'تم بيع منتج لك بنجاح. تمت إضافة مبلغ :amount$ إلى رصيدك.',
+    'new_rental_title' => 'طلب إيجار جديد! ',
+    'new_rental_body'  => 'تم استئجار آلتك بنجاح. تمت إضافة مبلغ :amount$ إلى رصيدك.',
 ];
