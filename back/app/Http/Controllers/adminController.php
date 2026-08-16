@@ -52,7 +52,7 @@ class adminController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-        if ($user->role != 'admin') {
+        if ($user->role != 'admin' || $user->active != 1) {
             return response()->json('You are not admin', 401);
         }
         $user->update([
@@ -104,14 +104,14 @@ class adminController extends Controller
     // all users in application
     public function indexUsers()
     {
-        $allUsers  = User::where('role', 'user')->get();
+        $allUsers  = User::all();
         return UsersResource::collection($allUsers);
     }
 
     // just pending users
     public function indexPendingAdmin()
     {
-        $pendingUsers  = User::where('active', '0')->where('role','admin')->get();
+        $pendingUsers  = User::where('active', '0')->where('role', 'admin')->get();
         return response()->json($pendingUsers, 200);
     }
 
@@ -123,7 +123,7 @@ class adminController extends Controller
     }
     public function acceptVerification()
     {
-        $pendingUsers=User::where('active', '0')->where('role','user')->where('is_verified', true)->get();
+        $pendingUsers = User::where('active', '0')->where('role', 'user')->where('is_verified', true)->get();
         return response()->json($pendingUsers, 200);
     }
     //update active to approved mean '1'

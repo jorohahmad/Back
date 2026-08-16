@@ -27,6 +27,7 @@ Route::post('verification3',[UserController::class,'AccountVerification'])->midd
 Route::post('password/forget', [UserController::class, 'forgetPassword'])->middleware('throttle:3,1');
 Route::post('password/verify-code', [UserController::class, 'verifyResetCode']); // 👈 المسار الجديد
 Route::post('password/reset', [UserController::class, 'resetPassword']);
+
 Route::post('password/change', [UserController::class, 'changePassword'])->middleware('auth:sanctum');
 //
 Route::post('create-product',[ProductController::class,'create'])->middleware('auth:sanctum');
