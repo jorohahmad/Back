@@ -20,6 +20,7 @@ class ProductService
             $product->description = $data['description'];
             $product->stock = $data['count'];
             $product->condition = $data['condition'];
+            $product->announcement = $data['announcement'] ?? false;
             $tempUploads = [];
             $mediaData = [
                 'audio_temp' => null,

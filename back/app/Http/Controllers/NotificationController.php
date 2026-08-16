@@ -13,20 +13,19 @@ class NotificationController extends Controller
     public function index()
     {
         // 1. جلب الإشعارات من الداتا بيز مع التصفح
-        $notifications = auth()->user()->notifications()->paginate(15);
+        $notifications = auth()->user()->notifications()->paginate(6);
 
         // 2. المرور على الإشعارات وترجمتها لحظياً
         $formattedNotifications = $notifications->getCollection()->map(function ($notification) {
-            
+
             // جلب المفاتيح من الداتا بيز
             $titleKey = $notification->data['title_key'] ?? null;
             $bodyKey  = $notification->data['body_key'] ?? null;
-            $amount   = $notification->data['amount'] ?? 0;
+            
 
             // الترجمة: إذا وجدنا مفتاح نترجمه، وإذا كانت إشعارات قديمة نعرضها كما هي
             $title = $titleKey ? __("messages.{$titleKey}") : ($notification->data['title'] ?? 'إشعار جديد');
-            $body  = $bodyKey ? __("messages.{$bodyKey}", ['amount' => $amount]) : ($notification->data['body'] ?? '');
-
+            $body  = $bodyKey ? __("messages.{$bodyKey}", $notification->data) : ($notification->data['body'] ?? '');
             return [
                 'id'             => $notification->id,
                 'title'          => $title,
@@ -53,7 +52,7 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         $count = Auth::user()->unreadNotifications()->count();
-        
+
         return response()->json([
             'status'       => 'success',
             'unread_count' => $count
@@ -66,7 +65,7 @@ class NotificationController extends Controller
     public function markAsRead(Request $request)
     {
         $user = Auth::user();
-        
+
         if ($request->has('notification_id')) {
             // تحديد إشعار واحد كمقروء
             $notification = $user->notifications()->find($request->notification_id);

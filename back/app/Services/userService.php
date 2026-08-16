@@ -67,7 +67,7 @@ class UserService
         return [
             'level'              => $sellerLevel,
             'join_date'          => $seller->created_at->format('Y-m-d'),
-            'image'             => $seller->image ? asset('storage/' . $seller->image) : null,
+            'image'             => $seller->imagePersonal ? asset('storage/' . $seller->imagePersonal) : null,
             // الرصيد الحالي (المتاح للسحب أو الشراء)
             'current_balance'    => $seller->balance,
 

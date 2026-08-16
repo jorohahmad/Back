@@ -14,6 +14,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Notifications\AccountApprovedNotification;
+use App\Notifications\AccountRejectedNotification;
 
 class adminController extends Controller
 {
@@ -54,8 +56,8 @@ class adminController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         if ($user->role != 'admin') {
             return response()->json('You are not admin', 401);
-            }
-            if ($user->active != '1') {
+        }
+        if ($user->active != '1') {
             return response()->json('Your account is not active yet ', 401);
         }
         $user->update([
@@ -114,7 +116,7 @@ class adminController extends Controller
     // just pending users
     public function indexPendingAdmin()
     {
-        $pendingUsers  = User::where('active', '0')->where('role','admin')->get();
+        $pendingUsers  = User::where('active', '0')->where('role', 'admin')->get();
         return response()->json($pendingUsers, 200);
     }
 
@@ -126,7 +128,7 @@ class adminController extends Controller
     }
     public function acceptVerification()
     {
-        $pendingUsers=User::where('active', '0')->where('role','user')->where('is_verified', true)->get();
+        $pendingUsers = User::where('active', '0')->where('role', 'user')->where('is_verified', true)->get();
         return response()->json($pendingUsers, 200);
     }
     //update active to approved mean '1'
@@ -137,7 +139,7 @@ class adminController extends Controller
         // active => 1
         $user->active = '1';
         $user->save();
-        Mail::to($user->email)->queue(new AcceptMail($user));
+        $user->notify(new AccountApprovedNotification());
         return response()->json('Approve User', 200);
     }
     public function approveAdmin(Request $request)
@@ -157,9 +159,9 @@ class adminController extends Controller
         $user = User::findOrFail($request->id);
 
         //delete
-        Mail::to($user->email)->queue(new RejectVerificationMail($user));
-
-        $user->delete();
+        $user->is_verified = false;
+        $user->save();
+        $user->notify(new AccountRejectedNotification());
         return response()->json('Reject User', 200);
     }
     public function RejectAdmin(Request $request)
@@ -181,7 +183,7 @@ class adminController extends Controller
 
 
 
-    
+
     public function updateInformation(Request $request)
     {
         /** @var \App\Models\User $user */

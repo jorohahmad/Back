@@ -69,6 +69,15 @@ class CheckExpiredRentals extends Command
                 // 4. 👈 تحديث حالة الفواتير المنتهية كلياً إلى "returned"
                 if (!empty($rentalsToClose)) {
                     Rental::whereIn('id', $rentalsToClose)->update(['status' => 'returned']);
+                    
+                    // 👈 الجديد: جلب بيانات الفواتير المغلقة مع أصحابها لإرسال الإشعار
+                    $closedRentals = Rental::with('renter')->whereIn('id', $rentalsToClose)->get();
+                    
+                    foreach ($closedRentals as $rental) {
+                        if ($rental->renter) {
+                            $rental->renter->notify(new \App\Notifications\RentalReturnedNotification($rental->id));
+                        }
+                    }
                 }
             });
 

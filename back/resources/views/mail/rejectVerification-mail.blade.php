@@ -8,6 +8,6 @@
 </head>
 <body>
     <h2>Hello {{ $user->name }} ❤</h2>
-    <p>your  verification request has been rejected.</p>
+    <p>your  verification request has been rejected,you can try again later.</p>
 </body>
 </html>
