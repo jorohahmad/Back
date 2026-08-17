@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('instrument');
             $table->enum('type',['Arabic','International']);
             $table->enum('level', ['beginner', 'intermediate', 'advanced']);
+            $table->string('image')->nullable();
             $table->string('audio')->nullable();
             $table->string('video')->nullable();
             $table->string('pdf')->nullable();

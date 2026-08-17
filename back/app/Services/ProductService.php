@@ -21,6 +21,7 @@ class ProductService
             $product->stock = $data['count'];
             $product->condition = $data['condition'];
             $product->announcement = $data['announcement'] ?? false;
+            $product->repricing= $data['repricing'] ?? false;
             $tempUploads = [];
             $mediaData = [
                 'audio_temp' => null,

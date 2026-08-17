@@ -22,6 +22,7 @@ class ProductRentalResource extends JsonResource
             'owner_id' => $this->owner_id,
             'title' => $this->title,
             'description' => $this->description,
+            'repricing'=>$this->repricing,
             'image' => collect([$this->image1, $this->image2, $this->image3])
                 ->filter()
                 ->map(fn($img) => asset('storage/' . $img))

@@ -21,6 +21,7 @@ class LessonController extends Controller
             'instrument' => 'required|string',
             'type' => 'required|in:Arabic,International',
             'level' => 'required|in:beginner,intermediate,advanced',
+            'image'=> 'nullable|image|max:2048',
             'audio' => 'nullable|file|mimes:mp3,wav',
             'video' => 'nullable|file|mimes:mp4,mov',
             'pdf' => 'nullable|file|mimes:pdf',
@@ -32,6 +33,11 @@ class LessonController extends Controller
         $lesson->instrument = $request->instrument;
         $lesson->type = $request->type;
         $lesson->level = $request->level;
+
+        if ($request->hasFile('image')) {
+            $imagePath = saveFile($request->file('image'), 'lessons/image');
+            $lesson->image = $imagePath;
+        }
 
         if ($request->hasFile('audio')) {
             $audioPath = saveFile($request->file('audio'), 'lessons/audio');

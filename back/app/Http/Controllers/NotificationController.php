@@ -4,45 +4,53 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\PriceOffer;
 
 class NotificationController extends Controller
 {
     /**
      * جلب جميع إشعارات المستخدم مع التصفح (Pagination)
      */
-    public function index()
+    public function index(Request $request)
     {
-        // 1. جلب الإشعارات من الداتا بيز مع التصفح
-        $notifications = auth()->user()->notifications()->paginate(6);
+        // 1. جلب الإشعارات بالطريقة العادية
+        $notifications = $request->user()->notifications()->paginate(10);
 
-        // 2. المرور على الإشعارات وترجمتها لحظياً
-        $formattedNotifications = $notifications->getCollection()->map(function ($notification) {
+        // 2. التعديل على البيانات قبل إرسالها للفرونت إند
+        $notifications->getCollection()->transform(function ($notification) {
+            $data = $notification->data;
 
-            // جلب المفاتيح من الداتا بيز
-            $titleKey = $notification->data['title_key'] ?? null;
-            $bodyKey  = $notification->data['body_key'] ?? null;
-            
+            // 3. إذا كان الإشعار من نوع "عرض سعر"، نبحث عن حالة العرض الحالية
+            if (isset($data['type']) && $data['type'] === 'price_offer') {
+                $offer = PriceOffer::find($data['transaction_id']);
+                
+                // إضافة حقل جديد للفرونت إند يخبره بالحالة الحالية للعرض
+                $data['offer_status'] = $offer ? $offer->status : 'deleted';
+                
+                // تحديث الـ data داخل الكولكشن (للعرض فقط، لا نعدل الداتا بيز)
+                $notification->data = $data;
+            }
 
-            // الترجمة: إذا وجدنا مفتاح نترجمه، وإذا كانت إشعارات قديمة نعرضها كما هي
-            $title = $titleKey ? __("messages.{$titleKey}") : ($notification->data['title'] ?? 'إشعار جديد');
-            $body  = $bodyKey ? __("messages.{$bodyKey}", $notification->data) : ($notification->data['body'] ?? '');
             return [
-                'id'             => $notification->id,
-                'title'          => $title,
-                'body'           => $body,
-                'transaction_id' => $notification->data['transaction_id'] ?? null,
-                'type'           => $notification->data['type'] ?? 'general',
-                'is_read'        => $notification->read_at !== null,
-                'created_at'     => $notification->created_at->diffForHumans(),
+                'id' => $notification->id,
+                'title' => __('messages.' . ($data['title_key'] ?? '')),
+                // تمرير المتغيرات المطلوبة للرسالة إذا كانت موجودة
+                'body' => __('messages.' . ($data['body_key'] ?? ''), $data),
+                'transaction_id' => $data['transaction_id'] ?? null,
+                'type' => $data['type'] ?? null,
+                'is_read' => $notification->read_at !== null,
+                'created_at' => $notification->created_at->diffForHumans(),
+                
+                // 👈 الحقل السحري الجديد الذي سيختبره الفرونت إند
+                'offer_status' => $data['offer_status'] ?? null, 
             ];
         });
 
-        // 3. إرجاع النتيجة للفرونت إند مع بيانات الصفحات
         return response()->json([
-            'data' => $formattedNotifications,
+            'data' => $notifications->items(),
             'pagination' => [
                 'current_page' => $notifications->currentPage(),
-                'last_page'    => $notifications->lastPage(),
+                'last_page' => $notifications->lastPage(),
             ]
         ]);
     }

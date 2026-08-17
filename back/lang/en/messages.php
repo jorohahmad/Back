@@ -98,4 +98,22 @@ return [
     'rental_returned_body'  => 'Your rental period has completely ended, the invoice is closed, and the instruments have been successfully returned. We hope you enjoyed playing!',
     'new_announcement_title' => 'New Instrument Announcement! ',
     'new_announcement_body'  => 'A premium instrument has been added to the app: :product_name. Check it out now!',
+    // Price Negotiation Notifications
+    'new_offer_title'        => 'New Price Offer!',
+    'new_offer_body'         => 'You have received a new offer of $:amount for the instrument :product_name.',
+    
+    'offer_accepted_title'   => 'Offer Accepted!',
+    'offer_accepted_body'    => 'The owner accepted your offer for :product_name. You can now add it to your cart at the discounted price!',
+    
+    'offer_rejected_title'   => 'Offer Rejected',
+    'offer_rejected_body'    => 'Sorry, the owner rejected your offer for :product_name. You can still add it to your cart at the original price.',
+    'repricing_not_allowed'       => 'This instrument is not open for price negotiation.',
+    'cannot_offer_own_product'    => 'You cannot make an offer on your own instrument.',
+    'offer_already_pending'       => 'You already have a pending offer for this instrument.',
+    'offer_sent_successfully'     => 'Offer sent successfully.',
+    'unauthorized_action'         => 'You are not authorized to take action on this offer.',
+    'offer_already_responded'     => 'You have already responded to this offer!',
+    'offer_accepted_successfully' => 'Offer accepted successfully.',
+    'offer_rejected_successfully' => 'Offer rejected.',
+    
 ];

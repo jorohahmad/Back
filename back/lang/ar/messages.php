@@ -99,4 +99,22 @@ return [
     'rental_returned_body'  => 'لقد انتهت فترة استئجارك بالكامل وتم إغلاق الفاتورة وإرجاع الآلات بنجاح. نأمل أنك استمتعت بالعزف!',
     'new_announcement_title' => 'إعلان عن آلة جديدة! ',
     'new_announcement_body'  => 'تمت إضافة آلة مميزة للتطبيق: :product_name. سارع بالاطلاع عليها الآن!',
+    // إشعارات التفاوض على السعر
+    'new_offer_title'        => 'عرض سعر جديد!',
+    'new_offer_body'         => 'لقد تلقيت عرضاً جديداً بقيمة $:amount للآلة :product_name.',
+    
+    'offer_accepted_title'   => 'تم قبول عرضك!',
+    'offer_accepted_body'    => 'وافق المالك على عرضك للآلة :product_name. يمكنك الآن إضافتها للسلة بالسعر المخفض!',
+    
+    'offer_rejected_title'   => 'تم رفض عرضك ',
+    'offer_rejected_body'    => 'نعتذر، رفض المالك عرضك للآلة :product_name. لا يزال بإمكانك إضافتها للسلة بالسعر الأساسي.',
+
+    'repricing_not_allowed'       => 'هذه الآلة غير متاحة للتفاوض على السعر.',
+    'cannot_offer_own_product'    => 'لا يمكنك تقديم عرض على آلتك الخاصة.',
+    'offer_already_pending'       => 'لديك عرض قيد الانتظار بالفعل لهذه الآلة.',
+    'offer_sent_successfully'     => 'تم إرسال العرض بنجاح.',
+    'unauthorized_action'         => 'غير مصرح لك باتخاذ إجراء على هذا العرض.',
+    'offer_already_responded'     => 'لقد قمت بالرد على هذا العرض مسبقاً!',
+    'offer_accepted_successfully' => 'تم قبول العرض بنجاح.',
+    'offer_rejected_successfully' => 'تم رفض العرض.',
 ];

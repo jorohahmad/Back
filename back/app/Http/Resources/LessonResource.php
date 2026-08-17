@@ -21,6 +21,7 @@ class LessonResource extends JsonResource
             'instrument' => $this->instrument,
             'type' => $this->type,
             'level' => $this->level,
+            'image' => asset('storage/' . $this->image),
             'audio' => asset('storage/' . $this->audio),
             'video' => asset('storage/' . $this->video),
             'pdf' => asset('storage/' . $this->pdf),

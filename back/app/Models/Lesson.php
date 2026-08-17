@@ -13,6 +13,7 @@ class Lesson extends Model
         'instrument',
         'type',
         'level',
+        'image',
         'audio',
         'video',
         'pdf',
