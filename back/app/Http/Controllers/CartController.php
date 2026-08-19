@@ -23,6 +23,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewCheckoutAdminNotification;
 
 class CartController extends Controller
 {
@@ -46,10 +48,12 @@ class CartController extends Controller
         try {
             $userId = Auth::user()->id;
             $transactionId = $this->checkoutService->processCheckout(
-                $userId, 
-                $validated['receive_governorate'], 
+                $userId,
+                $validated['receive_governorate'],
                 $validated['receive_office']
             );
+            $admins = User::where('role', 'admin')->get();
+            Notification::send($admins, new NewCheckoutAdminNotification($transactionId, auth()->user()->name));
 
             return response()->json([
                 'status'         => 'success',

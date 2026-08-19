@@ -118,5 +118,18 @@ return [
 
     'item_reached_title' => 'Your order is waiting! ',
     'item_reached_body'  => 'The instruments you ordered have successfully arrived at the office. Please proceed to pick them up.',
+
+    // Admin Notifications
+    'admin_new_user_title' => 'New User!',
+    'admin_new_user_body' => 'User :user_name has just joined the app.',
+    
+    'admin_new_product_title' => 'New Instrument Pending Review',
+    'admin_new_product_body' => 'User :owner_name has uploaded a new instrument (:product_name). Please review it.',
+    
+    'admin_new_checkout_title' => 'New Invoice Needs Shipping!',
+    'admin_new_checkout_body' => 'User :buyer_name completed a new checkout. Transaction ID: :transaction_id.',
+    
+    'admin_verification_request_title' => 'Account Verification Request',
+    'admin_verification_request_body' => 'User :user_name submitted a verification request. Please review their details.',
     
 ];

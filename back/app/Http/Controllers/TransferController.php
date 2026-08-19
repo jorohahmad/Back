@@ -8,9 +8,25 @@ use Illuminate\Http\Request;
 use App\Events\TransferStatusUpdated;
 use App\Notifications\ItemReachedNotification;
 use Illuminate\Support\Facades\Auth;
+use App\Services\ReceiptService;
 
 class TransferController extends Controller
 {
+    protected $receiptService;
+
+    public function __construct(ReceiptService $receiptService)
+    {
+        $this->receiptService = $receiptService;
+    }
+
+    public function getAllTransfersForAdmin()
+    {
+        return response()->json([
+            'status' => 'success',
+            'data'   => $this->receiptService->getAllReceiptsForAdmin()
+        ], 200);
+    }
+
     // 1. شحن السلة كاملة
     public function markAsOnWay(Request $request, $transactionId)
     {
@@ -46,7 +62,7 @@ class TransferController extends Controller
         // إطلاق الحدث (بدون نوع، لأن السلة كاملة انشحنت)
         broadcast(new TransferStatusUpdated($userId, $transactionId, 'onWay', $formattedDuration));
 
-        return response()->json(['message' => 'Transaction shipped successfully.']);
+        return response()->json(['message' => 'Transaction shipped successfully.'],200);
     }
 
     // 2. وصول السلة للمكتب
@@ -76,7 +92,7 @@ class TransferController extends Controller
             $user->notify(new ItemReachedNotification($transactionId));
         }
 
-        return response()->json(['message' => 'Transaction reached successfully.']);
+        return response()->json(['message' => 'Transaction reached successfully.'],200);
     }
 
     // 3. تأكيد استلام السلة كاملة

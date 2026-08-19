@@ -11,6 +11,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Services\ProductService;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewProductCreatedAdminNotification;
 
 class ProductController extends Controller
 {
@@ -25,13 +27,17 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         // 1. جلب المستخدم الحالي
-        $user = Auth::user(); 
-        
+        $user = Auth::user();
+
         // 2. التحقق من الصلاحية: إذا كان أدمن يتم التفعيل فوراً، وإلا يحتاج لموافقة
         $data['is_active'] = ($user->role === 'admin');
 
         // 3. إنشاء المنتج عبر تمرير معرف المستخدم والبيانات
         $product = $this->productService->createProduct($user->id, $data);
+        if ($user->role !== 'admin') {
+            $admins = User::where('role', 'admin')->get();
+            Notification::send($admins, new NewProductCreatedAdminNotification($product->title, $user->name));
+        }
         return response()->json([
             'message' => __('messages.product_created_successfully'),
             'product' => $product,
@@ -57,11 +63,11 @@ class ProductController extends Controller
 
     public function viewProductsForAdmin()
     {
-        $allproduct = Product::with(['items', 'owner']) 
+        $allproduct = Product::with(['items', 'owner'])
             ->whereHas('owner', function ($query) {
                 $query->where('role', 'admin');
             })
-            ->where('is_active', true) 
+            ->where('is_active', true)
             ->get();
 
         return productAdmin::collection($allproduct);
