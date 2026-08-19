@@ -3,6 +3,7 @@
 use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
 use App\Http\Controllers\adminProductController;
+use App\Http\Controllers\TransferController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonController;
@@ -12,13 +13,15 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Broadcast; // لا تنسَ هذا في الأعلى
+use Illuminate\Support\Facades\Broadcast; 
+use App\Http\Controllers\PriceOfferController;
 
-// هذا السطر سيقوم بإنشاء مسار /api/broadcasting/auth ويحميه بالتوكن
-Broadcast::routes(['middleware' => ['auth:sanctum']]);
+Broadcast::routes(['middleware' => ['auth:sanctum']]);///api/broadcasting/auth
+
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
 Route::post('auth/google', [UserController::class, 'googleRegisterOrLogin']);
 Route::post('register',[UserController::class,'register']);
 Route::post('login',[UserController::class,'login']);
@@ -102,14 +105,31 @@ Route::get('dashboard/top-machines', [DashboardController::class, 'getTopMachine
 Route::get('dashboard/quick-stats', [DashboardController::class, 'getQuickStats'])->middleware(['auth:sanctum', 'admin']);
 
 // الدونات
-Route::get('dashboard/transaction-types', [\App\Http\Controllers\DashboardController::class, 'getTransactionTypes'])
+Route::get('dashboard/transaction-types', [DashboardController::class, 'getTransactionTypes'])
     ->middleware('auth:sanctum', 'admin');
 //الرسم البياني
-Route::get('dashboard/revenue-chart', [\App\Http\Controllers\DashboardController::class, 'getRevenueChart'])
+Route::get('dashboard/revenue-chart', [DashboardController::class, 'getRevenueChart'])
     ->middleware('auth:sanctum','admin');
 // مسارات الإشعارات
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::delete('notifications/{id}/delete', [NotificationController::class, 'delete']);
+});
+
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::post('offers/send', [PriceOfferController::class, 'sendOffer']);
+    Route::patch('offers/{id}/accept', [PriceOfferController::class, 'acceptOffer']);
+    Route::patch('offers/{id}/reject', [PriceOfferController::class, 'rejectOffer']);
+});
+// مسارات أدمن النظام
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::put('admin/transfer/{transaction_id}/on-way', [TransferController::class, 'markAsOnWay']);
+    Route::put('admin/transfer/{transaction_id}/reached', [TransferController::class, 'markAsReached']);
+});
+
+// مسارات المستخدم (المشتري / المستأجر)
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::put('transfer/{transaction_id}/finish', [TransferController::class, 'markAsFinished']);
 });

@@ -39,9 +39,17 @@ class CartController extends Controller
 
     public function checkout(Request $request)
     {
+        $validated = $request->validate([
+            'receive_governorate' => 'required|string|max:100',
+            'receive_office'      => 'required|string|max:100',
+        ]);
         try {
             $userId = Auth::user()->id;
-            $transactionId = $this->checkoutService->processCheckout($userId);
+            $transactionId = $this->checkoutService->processCheckout(
+                $userId, 
+                $validated['receive_governorate'], 
+                $validated['receive_office']
+            );
 
             return response()->json([
                 'status'         => 'success',

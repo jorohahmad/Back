@@ -15,7 +15,11 @@ class Rental extends Model
         'end_date',
         'total_price',
         'status',
-        'transaction_id'
+        'transaction_id',
+        'transfer_status',
+        'expected_arrival_at',
+        'receive_governorate',
+        'receive_office'
     ];
     public function renter()
     {

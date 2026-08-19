@@ -38,11 +38,24 @@ class ReceiptService
         $orderTotal  = $order ? $order->total_price : 0;
         $rentalTotal = $rental ? $rental->total_price : 0;
         $date        = $order ? $order->created_at : $rental->created_at;
-
+        $transferStatus = $order ? $order->transfer_status : ($rental->transfer_status ?? 'pending');
+        $expectedArrival = $order ? $order->expected_arrival_at : ($rental->expected_arrival_at ?? null);
+        $remainingTime = '00:00:00';
+        if ($expectedArrival && $transferStatus === 'onWay') {
+            $target = \Carbon\Carbon::parse($expectedArrival);
+            if ($target->isFuture()) {
+                $diff = now()->diff($target); // حساب الفرق بين الآن ووقت الوصول
+                $hours = ($diff->days * 24) + $diff->h; // جمع الأيام إن وجدت مع الساعات
+                // تنسيق الوقت إلى HH:mm:ss
+                $remainingTime = sprintf('%02d:%02d:%02d', $hours, $diff->i, $diff->s); 
+            }
+        }
         return [
             'transaction_id' => $transactionId,
             'date'           => $date->format('Y-m-d H:i:s'),
             'grand_total'    => $orderTotal + $rentalTotal,
+            'remaining_time'      => $remainingTime,
+            'transfer_status'     => $transferStatus,
             'sales'          => $this->formatSales($order),
             'rentals'        => $this->formatRentals($rental),
         ];
@@ -68,6 +81,7 @@ class ReceiptService
                     'product_name' => $item->product->title ?? 'منتج غير معروف',
                     'product_image' => $item->product->image1 ? asset('storage/' . $item->product->image1) : null,
                     'user_name'    => $item->product->owner->name ?? 'مستخدم غير معروف',
+                    'user_id' => $item->product->owner->id ?? null,
                     'quantity'     => $item->quantity,
                     'unit_price'   => $item->unit_price,
                 ];
@@ -96,6 +110,7 @@ class ReceiptService
                     'product_name' => $item->productItem->product->title ?? 'عنصر غير معروف',
                     'product_image' => $item->productItem->product->image1 ? asset('storage/' . $item->productItem->product->image1) : null,
                     'user_name'    => $item->lessor->name ?? 'مستخدم غير معروف',
+                    'user_id' => $item->lessor->id ?? null,
                     'rent_days'    => $item->rent_days,
                     'start_date'   => $item->start_date,
                     'end_date'     => $item->end_date,

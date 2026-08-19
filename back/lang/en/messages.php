@@ -86,4 +86,37 @@ return [
     'new_sale_body'    => 'Your product has been sold. An amount of $:amount has been added to your balance.',
     'new_rental_title' => 'New Rental Request! ',
     'new_rental_body'  => 'Your instrument has been rented. An amount of $:amount has been added to your balance.',
+    'account_approved_title' => 'Account Verified! ',
+    'account_approved_body'  => 'Welcome! The administration has reviewed your details and your account has been successfully verified. You can now enjoy all features.',
+    'account_rejected_title' => 'Account Verification Update',
+    'account_rejected_body'  => 'Sorry, your account verification request has been rejected. Please review your details (like profile image or ID) and submit again.',
+    'product_approved_title' => 'Product Approved!',
+    'product_approved_body'  => 'Great! The administration has reviewed and approved your product. It is now live on the app.',
+    'product_rejected_title' => 'Product Update',
+    'product_rejected_body'  => 'Sorry, the product you uploaded was rejected and removed due to incomplete data or policy violations.',
+    'rental_returned_title' => 'Rental Period Ended ',
+    'rental_returned_body'  => 'Your rental period has completely ended, the invoice is closed, and the instruments have been successfully returned. We hope you enjoyed playing!',
+    'new_announcement_title' => 'New Instrument Announcement! ',
+    'new_announcement_body'  => 'A premium instrument has been added to the app: :product_name. Check it out now!',
+    // Price Negotiation Notifications
+    'new_offer_title'        => 'New Price Offer!',
+    'new_offer_body'         => 'You have received a new offer of $:amount for the instrument :product_name.',
+    
+    'offer_accepted_title'   => 'Offer Accepted!',
+    'offer_accepted_body'    => 'The owner accepted your offer for :product_name. You can now add it to your cart at the discounted price!',
+    
+    'offer_rejected_title'   => 'Offer Rejected',
+    'offer_rejected_body'    => 'Sorry, the owner rejected your offer for :product_name. You can still add it to your cart at the original price.',
+    'repricing_not_allowed'       => 'This instrument is not open for price negotiation.',
+    'cannot_offer_own_product'    => 'You cannot make an offer on your own instrument.',
+    'offer_already_pending'       => 'You already have a pending offer for this instrument.',
+    'offer_sent_successfully'     => 'Offer sent successfully.',
+    'unauthorized_action'         => 'You are not authorized to take action on this offer.',
+    'offer_already_responded'     => 'You have already responded to this offer!',
+    'offer_accepted_successfully' => 'Offer accepted successfully.',
+    'offer_rejected_successfully' => 'Offer rejected.',
+
+    'item_reached_title' => 'Your order is waiting! ',
+    'item_reached_body'  => 'The instruments you ordered have successfully arrived at the office. Please proceed to pick them up.',
+    
 ];

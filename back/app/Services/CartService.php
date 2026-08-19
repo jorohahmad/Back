@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Cart;
 use App\Models\Product;
+use App\Models\PriceOffer;
 use App\Models\ProductItem;
 use Carbon\Carbon;
 use Exception;
@@ -29,6 +30,14 @@ class CartService
         if (!$product->is_for_sale) {
             throw new Exception("هذا المنتج غير متاح للبيع.");
         }
+        // البحث عن عرض سعر مقبول مسبقاً من قبل المستخدم لهذا المنتج
+        $acceptedOffer = PriceOffer::where('user_id', $userId)
+            ->where('product_id', $product->id)
+            ->where('type', 'sale')
+            ->where('status', 'accepted')
+            ->first();
+
+        $finalPrice = $acceptedOffer ? $acceptedOffer->proposed_price : ($product->sale_price ?? 0);
 
         $existingCartItem = Cart::where('user_id', $userId)
             ->where('product_id', $product->id)
@@ -45,7 +54,10 @@ class CartService
 
         if ($existingCartItem) {
             // تحديث الكمية إذا كان موجوداً
-            $existingCartItem->update(['quantity' => $totalRequestedQuantity]);
+            $existingCartItem->update([
+                'quantity' => $totalRequestedQuantity,
+                'unit_price' => $finalPrice,
+                ]);
         } else {
             // إنشاء سطر جديد في السلة
             Cart::create([
@@ -53,7 +65,7 @@ class CartService
                 'product_id' => $product->id,
                 'type'       => 'sale',
                 'quantity'   => $quantity,
-                'unit_price' => $product->sale_price ?? 0,
+                'unit_price' => $finalPrice,
             ]);
         }
     }
@@ -65,6 +77,15 @@ class CartService
         if (!$product->is_for_rent) {
             throw new Exception("هذا المنتج غير متاح للإيجار.");
         }
+
+        $acceptedOffer = PriceOffer::where('user_id', $userId)
+            ->where('product_id', $product->id)
+            ->where('type', 'rent')
+            ->where('status', 'accepted')
+            ->first();
+
+        $finalPrice = $acceptedOffer ? $acceptedOffer->proposed_price : ($product->rent_price_daily ?? 0);
+
         $start = Carbon::parse($startDate);
         $end = Carbon::parse($endDate);
         $rentDays = $start->diffInDays($end) ?: 1;
@@ -92,7 +113,7 @@ class CartService
                 'product_item_id' => $item->id, // ربط القطعة العينية
                 'type'            => 'rent',
                 'quantity'        => 1, // الكمية في سطر الإيجار دائماً 1
-                'unit_price'      => $product->rent_price_daily ?? 0, // افترضنا وجود حقل rent_price
+                'unit_price'      => $finalPrice, // افترضنا وجود حقل rent_price
                 'rent_start_date' => $start->toDateString(),
                 'rent_end_date'   => $end->toDateString(),
                 'rent_days'       => $rentDays,
@@ -145,9 +166,9 @@ class CartService
         $firstItem     = $group->first();
         // 🎯 التعديل الجذري هنا: 
         // إذا كان بيع نجمع الأرقام، وإذا كان إيجار نعدّ الأسطر فقط لنتجاهل أي أرقام خاطئة في الداتا بيز!
-        $totalQuantity = $firstItem->type === 'sale' 
-                         ? $group->sum('quantity') 
-                         : $group->count();
+        $totalQuantity = $firstItem->type === 'sale'
+            ? $group->sum('quantity')
+            : $group->count();
 
         // 👇 تحديد "العدد المتاح" بذكاء بناءً على نوع العملية
         if ($firstItem->type === 'sale') {
