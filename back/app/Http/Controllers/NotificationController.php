@@ -23,10 +23,10 @@ class NotificationController extends Controller
             // 3. إذا كان الإشعار من نوع "عرض سعر"، نبحث عن حالة العرض الحالية
             if (isset($data['type']) && $data['type'] === 'price_offer') {
                 $offer = PriceOffer::find($data['transaction_id']);
-                
+
                 // إضافة حقل جديد للفرونت إند يخبره بالحالة الحالية للعرض
                 $data['offer_status'] = $offer ? $offer->status : 'deleted';
-                
+
                 // تحديث الـ data داخل الكولكشن (للعرض فقط، لا نعدل الداتا بيز)
                 $notification->data = $data;
             }
@@ -40,9 +40,9 @@ class NotificationController extends Controller
                 'type' => $data['type'] ?? null,
                 'is_read' => $notification->read_at !== null,
                 'created_at' => $notification->created_at->diffForHumans(),
-                
+
                 // 👈 الحقل السحري الجديد الذي سيختبره الفرونت إند
-                'offer_status' => $data['offer_status'] ?? null, 
+                'offer_status' => $data['offer_status'] ?? null,
             ];
         });
 
@@ -89,5 +89,15 @@ class NotificationController extends Controller
             'status'  => 'success',
             'message' => __('messages.notifications_marked_read') ?? 'تم تحديث حالة الإشعارات بنجاح'
         ], 200);
+    }
+
+    public function delete($notificationId)
+    {
+        $notification = Auth::user()->notifications()->where('id', $notificationId)->first();
+        if (!$notification) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+        $notification->delete();
+        return response()->json(['message' => 'Notification deleted successfully'],204);
     }
 }

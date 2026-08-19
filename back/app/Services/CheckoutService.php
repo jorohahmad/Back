@@ -14,9 +14,9 @@ class CheckoutService
     /**
      * الدالة الرئيسية التي تدير عملية الدفع بالكامل
      */
-    public function processCheckout(int $userId): string
+    public function processCheckout(int $userId,string $receiveGov,string $receiveOffice): string
     {
-        return DB::transaction(function () use ($userId) {
+        return DB::transaction(function () use ($userId, $receiveGov, $receiveOffice) {
             
             // 1. 🔐 قفل سجل المشتري أولاً! (لمنع مشكلة النقر المزدوج من الموبايل)
             $buyer = User::lockForUpdate()->find($userId);
@@ -43,11 +43,11 @@ class CheckoutService
             $saleItems = $cartItems->where('type', 'sale');
 
             if ($rentItems->isNotEmpty()) {
-                $this->processRentals($rentItems, $userId, $transactionId);
+                $this->processRentals($rentItems, $userId, $transactionId, $receiveGov, $receiveOffice);
             }
 
             if ($saleItems->isNotEmpty()) {
-                $this->processSales($saleItems, $userId, $transactionId);
+                $this->processSales($saleItems, $userId, $transactionId, $receiveGov, $receiveOffice);
             }
 
             // 4. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
@@ -57,7 +57,7 @@ class CheckoutService
         });
     }
 
-    private function processRentals($rentItems, int $userId, string $transactionId): void
+    private function processRentals($rentItems, int $userId, string $transactionId, string $receiveGov, string $receiveOffice): void
     {
         $productItemIds = $rentItems->pluck('product_item_id')->toArray();
 
@@ -75,7 +75,9 @@ class CheckoutService
             'renter_id'      => $userId,
             'transaction_id' => $transactionId,
             'total_price'    => $totalRentPrice,
-            'status'         => 'active'
+            'status'         => 'active',
+            'receive_governorate' => $receiveGov,
+            'receive_office'      => $receiveOffice
         ]);
 
         $rentalItemsData = $rentItems->map(function ($item) use ($rental) {
@@ -102,7 +104,7 @@ class CheckoutService
         $this->distributeEarningsToSellers($rentItems, 'rent', $rental->id);
     }
 
-    private function processSales($saleItems, int $userId, string $transactionId): void
+    private function processSales($saleItems, int $userId, string $transactionId, string $receiveGov, string $receiveOffice): void
     {
         $productIds = $saleItems->pluck('product_id')->unique()->toArray();
 
@@ -121,7 +123,9 @@ class CheckoutService
             'buyer_id'       => $userId,
             'transaction_id' => $transactionId,
             'total_price'    => $totalSalePrice,
-            'status'         => 'completed'
+            'status'         => 'completed',
+            'receive_governorate' => $receiveGov,
+            'receive_office'      => $receiveOffice
         ]);
 
         $orderItemsData = $saleItems->map(function ($item) use ($order) {

@@ -13,7 +13,11 @@ class Order extends Model
         // 'product_item_id',
         'total_price',
         'status',
-        'transaction_id'
+        'transaction_id',
+        'transfer_status',
+        'expected_arrival_at',
+        'receive_governorate',
+        'receive_office'
     ];
     public function buyer()
     {

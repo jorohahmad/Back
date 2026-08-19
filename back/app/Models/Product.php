@@ -13,6 +13,8 @@ class Product extends Model
         'image',
         'audio',
         'video',
+        'governorate',
+        'office',
         'owner_id',
         'is_for_sale',
         'sale_price',

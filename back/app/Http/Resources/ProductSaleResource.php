@@ -21,7 +21,7 @@ class ProductSaleResource extends JsonResource
             'owner_id' => $this->owner_id,
             'title' => $this->title,
             'description' => $this->description,
-           'repricing'=>$this->repricing,
+            'repricing' => $this->repricing,
             'image' => collect([$this->image1, $this->image2, $this->image3])
                 ->filter(fn($img) => !is_null($img) && $img !== '')
                 ->map(fn($img) => asset('storage/' . $img))
@@ -34,6 +34,8 @@ class ProductSaleResource extends JsonResource
             'sale_price' => $this->sale_price,
             'is_favorite' => $this->favorites->isNotEmpty(),
             'items_count' => $this->stock,
+            'governorate' => $this->governorate,
+            'office'      => $this->office
 
         ];
     }

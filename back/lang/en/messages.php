@@ -115,5 +115,8 @@ return [
     'offer_already_responded'     => 'You have already responded to this offer!',
     'offer_accepted_successfully' => 'Offer accepted successfully.',
     'offer_rejected_successfully' => 'Offer rejected.',
+
+    'item_reached_title' => 'Your order is waiting! ',
+    'item_reached_body'  => 'The instruments you ordered have successfully arrived at the office. Please proceed to pick them up.',
     
 ];

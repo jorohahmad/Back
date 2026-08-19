@@ -28,8 +28,10 @@ class ProductRequest extends FormRequest
             'image1' => 'nullable|image|max:2048',
             'image2' => 'nullable|image|max:2048',
             'image3' => 'nullable|image|max:2048',
-            'audio' => 'nullable|file|mimes:mp3,wav,m4a,ogg|max:10240',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a,mp4,aac,x-m4a',
             'video' => 'nullable|file|mimes:mp4,mov,avi,mkv|max:204800',
+            'governorate' => 'required|string|max:100',
+            'office' => 'required|string|max:100',
             'is_for_sale' => 'boolean',
             'sale_price' => 'required_if:is_for_sale,1|numeric|min:0',
             'is_for_rent' => 'boolean',
@@ -40,5 +42,4 @@ class ProductRequest extends FormRequest
             'repricing' => 'boolean'
         ];
     }
-    
 }

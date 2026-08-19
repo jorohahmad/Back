@@ -3,6 +3,7 @@
 use App\Events\SayHelloEvent;
 use App\Http\Controllers\adminController;
 use App\Http\Controllers\adminProductController;
+use App\Http\Controllers\TransferController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LessonController;
@@ -113,10 +114,21 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::delete('notifications/{id}/delete', [NotificationController::class, 'delete']);
 });
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::post('offers/send', [PriceOfferController::class, 'sendOffer']);
     Route::patch('offers/{id}/accept', [PriceOfferController::class, 'acceptOffer']);
     Route::patch('offers/{id}/reject', [PriceOfferController::class, 'rejectOffer']);
+});
+// مسارات أدمن النظام
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::put('admin/transfer/{transaction_id}/on-way', [TransferController::class, 'markAsOnWay']);
+    Route::put('admin/transfer/{transaction_id}/reached', [TransferController::class, 'markAsReached']);
+});
+
+// مسارات المستخدم (المشتري / المستأجر)
+Route::middleware(['auth:sanctum', 'active'])->group(function () {
+    Route::put('transfer/{transaction_id}/finish', [TransferController::class, 'markAsFinished']);
 });

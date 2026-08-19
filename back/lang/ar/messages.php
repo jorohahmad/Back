@@ -117,4 +117,7 @@ return [
     'offer_already_responded'     => 'لقد قمت بالرد على هذا العرض مسبقاً!',
     'offer_accepted_successfully' => 'تم قبول العرض بنجاح.',
     'offer_rejected_successfully' => 'تم رفض العرض.',
+
+    'item_reached_title' => 'طلبك بانتظارك! ',
+    'item_reached_body'  => 'لقد وصلت الآلات التي طلبتها إلى المكتب بنجاح. يرجى التفضل باستلامها.',
 ];
