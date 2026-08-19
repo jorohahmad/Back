@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewUserRegisteredAdminNotification;
+use App\Notifications\VerificationRequestAdminNotification;
 
 class UserController extends Controller
 {
@@ -35,7 +38,7 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|min:8|string',
         ]);
-        
+
         $user = new User();
         $user->name = $request->name;
         $user->email = $request->email;
@@ -43,13 +46,15 @@ class UserController extends Controller
 
         try {
             Mail::to($user->email)->queue(new RegisterMail($user->name));
+            $admins = User::where('role', 'admin')->get();
+            Notification::send($admins, new NewUserRegisteredAdminNotification($user->name));
         } catch (Exception $ex) {
             return response()->json([
                 'message' => __('messages.email_send_failed'),
                 'error' => $ex->getMessage(),
             ], 200);
         }
-        
+
         $user->save();
         return response()->json([
             'message' => __('messages.user_registered_successfully'),
@@ -75,7 +80,7 @@ class UserController extends Controller
         $user['imagePersonal'] = asset('storage/' . $user->imagePersonal);
         $user['imageId'] = asset('storage/' . $user->imageId);
         $token = $user->createToken('auth_token')->plainTextToken;
-        
+
         return response()->json([
             'message' => __('messages.login_successful'),
             'user' => $user,
@@ -96,12 +101,12 @@ class UserController extends Controller
         $request->validate([
             'productId' => 'required|exists:products,id'
         ]);
-        
+
         /** @var \App\Models\User $user */
         $user = Auth::user();
         $result = $user->favorites()->toggle($request->productId);
         $isFavorited = count($result['attached']) > 0;
-        
+
         return response()->json([
             // 👈 لاحظ كيف نستخدم الترجمة مع العمليات الشرطية
             'message' => $isFavorited ? __('messages.added_to_favorites') : __('messages.removed_from_favorites'),
@@ -140,11 +145,13 @@ class UserController extends Controller
             }
 
             if ($user->wasRecentlyCreated) {
+                $admins = User::where('role', 'admin')->get();
+                Notification::send($admins, new NewUserRegisteredAdminNotification($user->name));
                 return response()->json([
                     'success' => false,
                     'status' => 'pending',
                     'message' => __('messages.account_created_pending_approval')
-                ], 403); 
+                ], 403);
             }
 
             $authToken = $user->createToken('MobileAppAuthToken')->plainTextToken;
@@ -187,7 +194,7 @@ class UserController extends Controller
         ]);
         /** @var \App\Models\User $user */
         $user = Auth::user();
-        
+
         if ($user->key !== $request->key) {
             return response()->json([
                 'message' => __('messages.invalid_verification_code')
@@ -196,7 +203,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => __('messages.code_is_valid'),
-            'is_valid' => true 
+            'is_valid' => true
         ], 200);
     }
 
@@ -230,8 +237,11 @@ class UserController extends Controller
             'imagePersonal' => $personalPath,
             'imageId'       => $idPath,
             'is_verified'   => true,
-            'key'=>null,
+            'key' => null,
         ]);
+        
+        $admins = User::where('role', 'admin')->get();
+        Notification::send($admins, new VerificationRequestAdminNotification(auth()->user()->name));
 
         return (new UsersResource($user))->additional([
             'message' => __('messages.account_verified_successfully')
@@ -274,7 +284,7 @@ class UserController extends Controller
 
         return response()->json([
             'message' => __('messages.code_is_valid'),
-            'is_valid' => true 
+            'is_valid' => true
         ], 200);
     }
 
@@ -288,7 +298,7 @@ class UserController extends Controller
         $user = User::where('email', $request->email)->first();
         $user->update([
             'password' => \Illuminate\Support\Facades\Hash::make($request->password),
-            'key' => null 
+            'key' => null
         ]);
         return response()->json([
             'message' => __('messages.password_changed_successfully')
@@ -332,7 +342,7 @@ class UserController extends Controller
 
     public function getMyStats(Request $request)
     {
-        $seller = $request->user(); 
+        $seller = $request->user();
         $stats = $this->userService->getSellerStats($seller);
 
         return response()->json([
@@ -342,7 +352,7 @@ class UserController extends Controller
     }
 
     //Rating
-    public function rateSeller(Request $request,User $seller)
+    public function rateSeller(Request $request, User $seller)
     {
         $request->validate([
             'score'   => 'required|integer|min:1|max:5',
@@ -351,8 +361,8 @@ class UserController extends Controller
 
         try {
             $rating = $this->userService->rateUser(
-                $request->user(), 
-                $seller,          
+                $request->user(),
+                $seller,
                 $request->score,
                 $request->comment
             );
@@ -362,12 +372,11 @@ class UserController extends Controller
                 'message' => __('messages.rating_successful'),
                 'data'    => $rating
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'status'  => 'error',
                 'message' => $e->getMessage()
-            ], 400); 
+            ], 400);
         }
     }
 }

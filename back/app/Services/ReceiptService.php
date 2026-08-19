@@ -156,4 +156,78 @@ class ReceiptService
 
         return $receipts;
     }
+
+    public function getAllReceiptsForAdmin()
+    {
+        // 1. جلب المشتريات والإيجارات مع بيانات صاحب الفاتورة فقط (أسرع وأخف على الداتابيز)
+        $orders =Order::with('buyer')
+            ->whereNotNull('transaction_id')
+            ->get()
+            ->keyBy('transaction_id');
+
+        $rentals = Rental::with('renter')
+            ->whereNotNull('transaction_id')
+            ->get()
+            ->keyBy('transaction_id');
+
+        $transactionIds = $orders->keys()->merge($rentals->keys())->unique();
+        $receipts = [];
+
+        foreach ($transactionIds as $transactionId) {
+            $order  = $orders->get($transactionId);
+            $rental = $rentals->get($transactionId);
+
+            // 2. استخراج المالك، التاريخ، والحالة
+            $owner = null;
+            $date = null;
+            $transferStatus = 'pending';
+            $expectedArrival = null;
+
+            if ($order) {
+                $owner = $order->buyer;
+                $date = $order->created_at;
+                $transferStatus = $order->transfer_status;
+                $expectedArrival = $order->expected_arrival_at;
+            } elseif ($rental) {
+                $owner = $rental->renter;
+                $date = $rental->created_at;
+                $transferStatus = $rental->transfer_status;
+                $expectedArrival = $rental->expected_arrival_at;
+            }
+
+            // 3. حساب الوقت المتبقي بدقة
+            $remainingTime = '00:00:00';
+            if ($expectedArrival && $transferStatus === 'onWay') {
+                $target = \Carbon\Carbon::parse($expectedArrival);
+                if ($target->isFuture()) {
+                    $diff = now()->diff($target);
+                    $hours = ($diff->days * 24) + $diff->h;
+                    $remainingTime = sprintf('%02d:%02d:%02d', $hours, $diff->i, $diff->s);
+                }
+            }
+
+            // 4. بناء الهيكل المطابق للصورة تماماً
+            $receipts[] = [
+                'transaction_id'  => $transactionId,
+                'date'            => $date ? $date->format('Y-m-d H:i:s') : null,
+                'grand_total'     => (float) (($order ? $order->total_price : 0) + ($rental ? $rental->total_price : 0)),
+                'remaining_time'  => $remainingTime,
+                'transfer_status' => $transferStatus,
+                'invoice_owner'   => $owner ? [
+                    'id'    => $owner->id,
+                    'name'  => $owner->name,
+                    'email' => $owner->email,
+                    'phone' => $owner->phone ?? null, 
+                    'image' => $owner->imagePersonal ? asset('storage/' . $owner->imagePersonal) : null,
+                ] : null,
+            ];
+        }
+
+        // 5. الترتيب من الأحدث إلى الأقدم
+        usort($receipts, function ($a, $b) {
+            return strtotime($b['date']) - strtotime($a['date']);
+        });
+
+        return $receipts;
+    }
 }

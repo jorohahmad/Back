@@ -124,6 +124,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 });
 // مسارات أدمن النظام
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('admin/transfers', [TransferController::class, 'getAllTransfersForAdmin']);
     Route::put('admin/transfer/{transaction_id}/on-way', [TransferController::class, 'markAsOnWay']);
     Route::put('admin/transfer/{transaction_id}/reached', [TransferController::class, 'markAsReached']);
 });
@@ -131,4 +132,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 // مسارات المستخدم (المشتري / المستأجر)
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
     Route::put('transfer/{transaction_id}/finish', [TransferController::class, 'markAsFinished']);
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->group(function () {
+    
+    Route::get('admin/notifications', [NotificationController::class, 'indexForAdmin']);
+    Route::put('admin/notifications/mark-read', [NotificationController::class, 'markAllAsRead']);
+    
 });

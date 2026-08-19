@@ -120,4 +120,16 @@ return [
 
     'item_reached_title' => 'طلبك بانتظارك! ',
     'item_reached_body'  => 'لقد وصلت الآلات التي طلبتها إلى المكتب بنجاح. يرجى التفضل باستلامها.',
+
+    'admin_new_user_title' => 'مستخدم جديد!',
+    'admin_new_user_body' => 'انضم المستخدم :user_name للتو إلى التطبيق.',
+    
+    'admin_new_product_title' => 'آلة جديدة بانتظار المراجعة',
+    'admin_new_product_body' => 'قام المستخدم :owner_name برفع آلة جديدة (:product_name). يرجى مراجعتها.',
+    
+    'admin_new_checkout_title' => 'فاتورة جديدة بحاجة للشحن!',
+    'admin_new_checkout_body' => 'قام المستخدم :buyer_name بإتمام عملية دفع جديدة. رقم المعاملة: :transaction_id.',
+    
+    'admin_verification_request_title' => 'طلب توثيق حساب',
+    'admin_verification_request_body' => 'أرسل المستخدم :user_name طلباً لتوثيق حسابه. يرجى مراجعة بياناته.',
 ];

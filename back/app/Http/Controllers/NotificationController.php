@@ -100,4 +100,47 @@ class NotificationController extends Controller
         $notification->delete();
         return response()->json(['message' => 'Notification deleted successfully'],204);
     }
+
+    public function indexForAdmin()
+    {
+        $admin = Auth::user();
+
+        // 👈 التعديل هنا: استخدمنا get() بدلاً من paginate()
+        $notifications = $admin->notifications()->get();
+
+        $formattedNotifications = $notifications->map(function ($notification) {
+            $data = $notification->data;
+
+            $replace = [];
+            if (isset($data['user_name'])) $replace['user_name'] = $data['user_name'];
+            if (isset($data['product_name'])) $replace['product_name'] = $data['product_name'];
+            if (isset($data['owner_name'])) $replace['owner_name'] = $data['owner_name'];
+            if (isset($data['buyer_name'])) $replace['buyer_name'] = $data['buyer_name'];
+            if (isset($data['transaction_id'])) $replace['transaction_id'] = $data['transaction_id'];
+
+            return [
+                'id'         => $notification->id,
+                'type'       => $data['type'] ?? 'admin_notification',
+                'title'      => __('messages.' . ($data['title_key'] ?? ''), $replace),
+                'body'       => __('messages.' . ($data['body_key'] ?? ''), $replace),
+                'is_read'    => $notification->read_at !== null,
+                'created_at' => $notification->created_at->diffForHumans(),
+            ];
+        });
+
+        // 👈 التعديل هنا: أزلنا مصفوفة الـ pagination من الاستجابة
+        return response()->json([
+            'status' => 'success',
+            'data'   => $formattedNotifications
+        ]);
+    }
+    public function markAllAsRead()
+    {
+        Auth::user()->unreadNotifications->markAsRead();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تحديد جميع الإشعارات كمقروءة.'
+        ]);
+    }
 }
