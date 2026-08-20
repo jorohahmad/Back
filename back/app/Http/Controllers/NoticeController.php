@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewImportantNoticeNotification;
 
 class NoticeController extends Controller
 {
@@ -18,7 +20,7 @@ class NoticeController extends Controller
     public function index()
     {
 
-       $user = Auth::user();
+        $user = Auth::user();
 
         if (!$user->isAdmin()) {
             return response()->json([
@@ -38,7 +40,6 @@ class NoticeController extends Controller
         })
             ->OrderBy('due_date', 'asc')
             ->get();
-
         return response()->json([
             'status' => 'success',
             'data' => $notices
@@ -52,7 +53,10 @@ class NoticeController extends Controller
 
         $validated = $request->validated();
         $notice = $user->notices()->create($validated);
-
+        if (in_array($notice->type, ['urgent', 'project'])) {
+            $otherAdmins = User::where('role', 'admin')->where('id', '!=', $user->id)->get();
+            Notification::send($otherAdmins, new NewImportantNoticeNotification($notice->title, $notice->type, $user->name));
+        }
         return response()->json([
             'status' => ' success',
             'message' => 'added sucessful',

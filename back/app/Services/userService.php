@@ -68,11 +68,11 @@ class UserService
             'level'              => $sellerLevel,
             'join_date'          => $seller->created_at->format('Y-m-d'),
             'image'             => $seller->imagePersonal ? asset('storage/' . $seller->imagePersonal) : null,
-            // الرصيد الحالي (المتاح للسحب أو الشراء)
             'current_balance'    => $seller->balance,
 
            
             'numbers'=>[
+                $seller->balance,
                 round($netSalesProfit + $netRentalsProfit, 2),
                 (int) $rentedItemsCount,
                 (int) $soldItemsCount

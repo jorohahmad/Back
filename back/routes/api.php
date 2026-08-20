@@ -75,6 +75,8 @@ Route::get('seller/{seller}/profile', [UserController::class, 'getSellerProfile'
 Route::get('seller/my-stats', [UserController::class, 'getMyStats'])->middleware('auth:sanctum');
 Route::post('seller/{seller}/rate', [UserController::class, 'rateSeller'])->middleware('auth:sanctum');
 
+Route::post('user/charge', [UserController::class, 'recharge'])->middleware('auth:sanctum');
+
 Route::post('Cart/add',[CartController::class,'addToCart'])->middleware(['auth:sanctum','active']);
 Route::get('Cart/view',[CartController::class,'viewCart'])->middleware('auth:sanctum');
 Route::delete('Cart/delete',[CartController::class,'deleteFromCart'])->middleware(['auth:sanctum','active']);
@@ -114,7 +116,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::post('notifications/mark-as-read', [NotificationController::class, 'markAsRead']);
-    Route::delete('notifications/{id}/delete', [NotificationController::class, 'delete']);
+    Route::delete('notifications/{id}', [NotificationController::class, 'delete']);
 });
 
 Route::middleware(['auth:sanctum', 'active'])->group(function () {
@@ -135,7 +137,7 @@ Route::middleware(['auth:sanctum', 'active'])->group(function () {
 });
 
 Route::middleware(['auth:sanctum', 'admin'])->group(function () {
-    
+    Route::get('admin/activity-log', [NotificationController::class, 'adminActivityLog']);
     Route::get('admin/notifications', [NotificationController::class, 'indexForAdmin']);
     Route::put('admin/notifications/mark-read', [NotificationController::class, 'markAllAsRead']);
     

@@ -101,10 +101,10 @@ return [
     // Price Negotiation Notifications
     'new_offer_title'        => 'New Price Offer!',
     'new_offer_body'         => 'You have received a new offer of $:amount for the instrument :product_name.',
-    
+
     'offer_accepted_title'   => 'Offer Accepted!',
     'offer_accepted_body'    => 'The owner accepted your offer for :product_name. You can now add it to your cart at the discounted price!',
-    
+
     'offer_rejected_title'   => 'Offer Rejected',
     'offer_rejected_body'    => 'Sorry, the owner rejected your offer for :product_name. You can still add it to your cart at the original price.',
     'repricing_not_allowed'       => 'This instrument is not open for price negotiation.',
@@ -122,14 +122,20 @@ return [
     // Admin Notifications
     'admin_new_user_title' => 'New User!',
     'admin_new_user_body' => 'User :user_name has just joined the app.',
-    
+
     'admin_new_product_title' => 'New Instrument Pending Review',
     'admin_new_product_body' => 'User :owner_name has uploaded a new instrument (:product_name). Please review it.',
-    
+
     'admin_new_checkout_title' => 'New Invoice Needs Shipping!',
     'admin_new_checkout_body' => 'User :buyer_name completed a new checkout. Transaction ID: :transaction_id.',
-    
+
     'admin_verification_request_title' => 'Account Verification Request',
     'admin_verification_request_body' => 'User :user_name submitted a verification request. Please review their details.',
-    
+
+    // إشعارات نشاطات الإدارة 
+    'admin_action_new_admin_title'  => 'New Admin Registered!',
+    'admin_action_new_admin_body'   => 'A new admin account has been created with the name: :admin_name.',
+
+    'admin_action_new_notice_title' => 'New Admin Notice (:notice_type)',
+    'admin_action_new_notice_body'  => 'Admin :admin_name has added a new important notice titled: :notice_title.',
 ];

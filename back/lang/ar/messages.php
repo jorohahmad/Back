@@ -132,4 +132,11 @@ return [
     
     'admin_verification_request_title' => 'طلب توثيق حساب',
     'admin_verification_request_body' => 'أرسل المستخدم :user_name طلباً لتوثيق حسابه. يرجى مراجعة بياناته.',
+
+    // إشعارات نشاطات الإدارة 
+    'admin_action_new_admin_title' => 'تسجيل أدمن جديد!',
+    'admin_action_new_admin_body'  => 'تم إنشاء حساب إداري جديد باسم: :admin_name.',
+    
+    'admin_action_new_notice_title' => 'ملاحظة إدارية جديدة (:notice_type)',
+    'admin_action_new_notice_body'  => 'قام المدير :admin_name بإضافة ملاحظة هامة جديدة بعنوان: :notice_title.',
 ];

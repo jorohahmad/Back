@@ -14,8 +14,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use App\Notifications\AccountApprovedNotification;
 use App\Notifications\AccountRejectedNotification;
+use App\Notifications\NewAdminRegisteredNotification;
 
 class adminController extends Controller
 {
@@ -33,6 +35,8 @@ class adminController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
 
+        $otherAdmins = User::where('role', 'admin')->where('id', '!=', $user->id)->get();
+        Notification::send($otherAdmins, new NewAdminRegisteredNotification($user->name));
         return response()->json([
             'message' => 'User registered successfully',
             'user' => $user,

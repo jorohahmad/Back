@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PriceOffer;
-
+use App\Notifications\NewAdminRegisteredNotification;
+use App\Notifications\NewImportantNoticeNotification;
 class NotificationController extends Controller
 {
     /**
@@ -98,7 +99,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Notification not found'], 404);
         }
         $notification->delete();
-        return response()->json(['message' => 'Notification deleted successfully'],204);
+        return response()->json(['message' => 'Notification deleted successfully'],200);
     }
 
     public function indexForAdmin()
@@ -142,5 +143,41 @@ class NotificationController extends Controller
             'status' => 'success',
             'message' => 'تم تحديد جميع الإشعارات كمقروءة.'
         ]);
+    }
+    // سجل نشاطات الاداراة فقط
+    public function adminActivityLog()
+    {
+        $admin = Auth::user();
+
+        $activities = $admin->notifications()
+            ->whereIn('type', [
+                NewAdminRegisteredNotification::class,
+                NewImportantNoticeNotification::class,
+            ])
+            ->latest()
+            ->get();
+
+        $formattedActivities = $activities->map(function ($notification) {
+            $data = $notification->data;
+            
+            $replace = [];
+            if (isset($data['admin_name'])) $replace['admin_name'] = $data['admin_name'];
+            if (isset($data['notice_title'])) $replace['notice_title'] = $data['notice_title'];
+            if (isset($data['notice_type'])) $replace['notice_type'] = $data['notice_type'];
+
+            return [
+                'id'         => $notification->id,
+                'type'       => $data['type'] ?? 'admin_action_log',
+                'title'      => __('messages.' . ($data['title_key'] ?? ''), $replace),
+                'body'       => __('messages.' . ($data['body_key'] ?? ''), $replace),
+                'is_read'    => $notification->read_at !== null,
+                'created_at' => $notification->created_at->diffForHumans(),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $formattedActivities
+        ], 200);
     }
 }
