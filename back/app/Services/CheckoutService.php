@@ -6,6 +6,7 @@ use App\Models\{Cart, Product, ProductItem, Rental, RentalItem, Order, OrderItem
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Exception;
+use App\Models\PriceOffer;
 use App\Notifications\NewSaleNotification;
 use App\Notifications\NewRentalNotification;
 
@@ -49,6 +50,13 @@ class CheckoutService
             if ($saleItems->isNotEmpty()) {
                 $this->processSales($saleItems, $userId, $transactionId, $receiveGov, $receiveOffice);
             }
+
+            $purchasedProductIds = $cartItems->pluck('product_id')->unique()->toArray();
+            
+            PriceOffer::where('user_id', $userId)
+                ->whereIn('product_id', $purchasedProductIds)
+                ->where('status', 'accepted')
+                ->delete();
 
             // 4. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
             Cart::where('user_id', $userId)->delete();

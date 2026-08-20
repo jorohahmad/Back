@@ -10,6 +10,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Notification;
+use App\Notifications\NewImportantNoticeNotification;
 
 class NoticeController extends Controller
 {
@@ -18,8 +20,12 @@ class NoticeController extends Controller
     public function index()
     {
 
+<<<<<<< HEAD
         $userId = Auth::user()->id;
         $user = User::findOrFail($userId);
+=======
+        $user = Auth::user();
+>>>>>>> 139cc81b7a0b54ed9fcdec31db6483e3b9e50ebe
 
         if (!$user->isAdmin()) {
             return response()->json([
@@ -27,6 +33,7 @@ class NoticeController extends Controller
             ], 403);
         }
 
+<<<<<<< HEAD
     // 3. جلب البيانات
     $notices = Notice::where(function ($query) use ($user) {
         $query->where('type', '!=', 'personal')
@@ -37,6 +44,22 @@ class NoticeController extends Controller
     })
     ->orderBy('due_date', 'asc')
     ->get();
+=======
+        $notices = Notice::where(function ($quary) use ($user) {
+            $quary->where('type', '!=', 'personal')
+                ->orWhere(function ($q) use ($user) {
+                    $q->where('type', 'personal')
+                        ->where('user_id', $user->id);
+                });
+        })
+            ->OrderBy('due_date', 'asc')
+            ->get();
+        return response()->json([
+            'status' => 'success',
+            'data' => $notices
+        ], 200);
+    }
+>>>>>>> 139cc81b7a0b54ed9fcdec31db6483e3b9e50ebe
 
     return response()->json([
         'status' => 'success',
@@ -50,7 +73,10 @@ class NoticeController extends Controller
 
         $validated = $request->validated();
         $notice = $user->notices()->create($validated);
-
+        if (in_array($notice->type, ['urgent', 'project'])) {
+            $otherAdmins = User::where('role', 'admin')->where('id', '!=', $user->id)->get();
+            Notification::send($otherAdmins, new NewImportantNoticeNotification($notice->title, $notice->type, $user->name));
+        }
         return response()->json([
             'status' => ' success',
             'message' => 'added sucessful',

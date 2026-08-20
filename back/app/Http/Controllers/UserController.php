@@ -21,6 +21,7 @@ use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\NewUserRegisteredAdminNotification;
 use App\Notifications\VerificationRequestAdminNotification;
+use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
@@ -239,7 +240,7 @@ class UserController extends Controller
             'is_verified'   => true,
             'key' => null,
         ]);
-        
+
         $admins = User::where('role', 'admin')->get();
         Notification::send($admins, new VerificationRequestAdminNotification(auth()->user()->name));
 
@@ -378,5 +379,25 @@ class UserController extends Controller
                 'message' => $e->getMessage()
             ], 400);
         }
+    }
+
+    public function recharge(Request $request)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1'
+        ]);
+        $userId=Auth::id();
+
+        $newBalance=DB::transaction(function () use ($userId, $request) {
+            $user =User::lockForUpdate()->find($userId);
+            $user->increment('balance', $request->amount);
+            return $user->balance; 
+        });
+
+        return response()->json([
+            'status'      => 'success',
+            'message'     => 'تم شحن الرصيد بنجاح',
+            'new_balance' => round($newBalance, 2),
+        ], 200);
     }
 }
