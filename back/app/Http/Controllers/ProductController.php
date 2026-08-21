@@ -26,13 +26,9 @@ class ProductController extends Controller
     public function create(ProductRequest $request)
     {
         $data = $request->validated();
-        // 1. جلب المستخدم الحالي
         $user = Auth::user();
-
-        // 2. التحقق من الصلاحية: إذا كان أدمن يتم التفعيل فوراً، وإلا يحتاج لموافقة
         $data['is_active'] = ($user->role === 'admin');
 
-        // 3. إنشاء المنتج عبر تمرير معرف المستخدم والبيانات
         $product = $this->productService->createProduct($user->id, $data);
         if ($user->role !== 'admin') {
             $admins = User::where('role', 'admin')->get();
@@ -44,22 +40,35 @@ class ProductController extends Controller
         ], 201);
     }
 
-    public function indexForSale()
+    public function indexForSale(\Illuminate\Http\Request $request)
     {
+        $perPage = $request->query('per_page', 5);
+
         $products = Product::with(['items', 'owner', 'favorites' => function ($query) {
             $query->where('user_id', Auth::id());
         }])
-            ->where('is_for_sale', true)->where('is_active', true)
-            ->get();
+            ->where('owner_id', '!=', Auth::id())
+            ->where('is_for_sale', true)
+            ->where('is_active', true)
+            ->where('stock', '>', 0)
+            ->latest()
+            ->paginate($perPage);
         return ProductSaleResource::collection($products);
     }
-    public function indexForRent()
+
+    public function indexForRent(\Illuminate\Http\Request $request)
     {
+        $perPage = $request->query('per_page', 2);
+
         $products = Product::with(['items', 'owner', 'favorites' => function ($query) {
             $query->where('user_id', Auth::id());
-        }])->where('is_for_rent', true)->where('is_active', true)->get();
+        }])
+            ->where('owner_id', '!=', Auth::id())
+            ->where('is_for_rent', true)
+            ->where('is_active', true)
+            ->paginate($perPage);
         return ProductRentalResource::collection($products);
-    } //$products = Product::with(['items', 'owner'])
+    }
 
     public function viewProductsForAdmin()
     {

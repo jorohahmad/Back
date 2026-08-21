@@ -16,8 +16,9 @@ class productAdmin extends JsonResource
     {
         return [
             'id'=>$this->id,
+            'email'=>$this->owner ? $this->owner->email : null,
             'category'=>$this->title,
-            'price'=> $this->price,
+            'price'=> ($this->sale_price > 0) ? $this->sale_price : (($this->rent_price > 0) ? $this->rent_price : $this->price),
             'audioUrl'=> $this->audio ? asset('storage/' . $this->audio) : null,
             'avatar' =>collect([$this->image1, $this->image2, $this->image3])
             ->filter()
@@ -29,8 +30,7 @@ class productAdmin extends JsonResource
             'stock'=>$this->stock,
             'isSale'=>$this->is_for_sale,
             'isRent'=>$this->is_for_rent,
-            'salePrice'=>$this->sale_price,
-            'rentPrice'=>$this->rent_price,
+
         ];
     }
 }

@@ -382,7 +382,7 @@ class DashboardController extends Controller
             // استقبال الـ type من الفرونت إند (?type=sale أو ?type=rent)
             $type = $request->query('type', 'sale');
 
-            $data = $this->dashboardService->getTopMachinesData($type, 5);
+            $data = $this->dashboardService->getTopMachinesData($type, 3);
 
             return response()->json([
                 'status'  => 'success',

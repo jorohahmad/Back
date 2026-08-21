@@ -9,6 +9,7 @@ class RentalItem extends Model
     protected $fillable = [
         'rental_id',
         'lessor_id',
+        'status',
         'product_item_id',
         'start_date',
         'end_date',

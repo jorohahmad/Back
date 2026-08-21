@@ -66,10 +66,10 @@ Route::get('/admin/users/approve/{id}', [adminController::class, 'approveUser'])
 Route::get('/admin/users/reject/{id}', [adminController::class, 'RejectUser'])->middleware('auth:sanctum');//post or patch
 
 Route::post('notice/store' , [NoticeController::class, 'store'])->middleware(['auth:sanctum','admin']);
-Route::post('notice/update' , [NoticeController::class, 'update'])->middleware('auth:sanctum','admin');
-Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middleware('auth:sanctum','admin');//Route::delete('notice/{id}')
-Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware('auth:sanctum','admin');
-Route::get('notice/all' , [NoticeController::class, 'index'])->middleware('auth:sanctum');
+Route::post('notice/update' , [NoticeController::class, 'update'])->middleware(['auth:sanctum','admin']);
+Route::delete('notice/delete' , [NoticeController::class, 'destroy'])->middleware(['auth:sanctum','admin']);//Route::delete('notice/{id}')
+Route::get('notice/personal' , [NoticeController::class, 'personalNotice'])->middleware(['auth:sanctum','admin']);
+Route::get('notice/all' , [NoticeController::class, 'index'])->middleware(['auth:sanctum']);
 
 Route::get('seller/{seller}/profile', [UserController::class, 'getSellerProfile'])->middleware('auth:sanctum');
 Route::get('seller/my-stats', [UserController::class, 'getMyStats'])->middleware('auth:sanctum');

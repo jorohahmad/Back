@@ -35,7 +35,8 @@ class ProductSaleResource extends JsonResource
             'is_favorite' => $this->favorites->isNotEmpty(),
             'items_count' => $this->stock,
             'governorate' => $this->governorate,
-            'office'      => $this->office
+            'office'      => $this->office,
+            'condition'   => $this->condition,
 
         ];
     }

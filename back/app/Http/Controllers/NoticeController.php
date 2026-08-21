@@ -22,7 +22,7 @@ class NoticeController extends Controller
 
         $user = Auth::user();
 
-        if (!$user->isAdmin()) {
+        if (!$user->role=='admin') {
             return response()->json([
                 'message' => 'are not admin'
             ], 403);

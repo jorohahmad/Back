@@ -36,7 +36,8 @@ class ProductRentalResource extends JsonResource
             'items_count'      => $activeItems->count(),
             'serial_number'    => $activeItems->pluck('id')->toArray(),
             'governorate' => $this->governorate,
-            'office'      => $this->office
+            'office'      => $this->office,
+            'condition'   => $this->condition,
         ];
     }
 }
