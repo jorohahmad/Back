@@ -13,7 +13,6 @@ class Rating extends Model
         'comment',
     ];
 
-    // علاقة التقييم بصاحبه
     public function rater()
     {
         return $this->belongsTo(User::class, 'rater_id');

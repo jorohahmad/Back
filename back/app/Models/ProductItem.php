@@ -18,7 +18,6 @@ class ProductItem extends Model
         return $this->belongsTo(Product::class, 'product_id');
     }
 
-    // تتبع العمليات التي تمت على هذه القطعة المحددة
     public function orders() { return $this->hasMany(Order::class); }
     public function rentals() { return $this->hasMany(Rental::class); }
 }

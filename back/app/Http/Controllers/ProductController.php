@@ -40,7 +40,7 @@ class ProductController extends Controller
         ], 201);
     }
 
-    public function indexForSale(\Illuminate\Http\Request $request)
+    public function indexForSale(Request $request)
     {
         $perPage = $request->query('per_page', 5);
 
@@ -56,7 +56,7 @@ class ProductController extends Controller
         return ProductSaleResource::collection($products);
     }
 
-    public function indexForRent(\Illuminate\Http\Request $request)
+    public function indexForRent(Request $request)
     {
         $perPage = $request->query('per_page', 2);
 

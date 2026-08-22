@@ -16,7 +16,6 @@ use App\Notifications\NewImportantNoticeNotification;
 class NoticeController extends Controller
 {
     use AuthorizesRequests;
-    // عرض كل الملاحظات التي تنطبق عليها الشروط المطلوبة
     public function index()
     {
 

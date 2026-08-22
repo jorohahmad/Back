@@ -19,18 +19,16 @@ class CheckoutService
     {
         return DB::transaction(function () use ($userId, $receiveGov, $receiveOffice) {
             
-            // 1. 🔐 قفل سجل المشتري أولاً! (لمنع مشكلة النقر المزدوج من الموبايل)
             $buyer = User::lockForUpdate()->find($userId);
 
-            // 2. جلب السلة بعد القفل (لكي يرى الطلب الثاني أن السلة أصبحت فارغة)
             $cartItems = Cart::with('product')->where('user_id', $userId)->get();
 
             if ($cartItems->isEmpty()) {
                 throw new Exception("السلة فارغة، لا يمكن إتمام العملية.");
             }
 
-            // 3. حساب الإجمالي الكلي للسلة
             $rentTotal = $cartItems->where('type', 'rent')->sum(fn($item) => $item->unit_price * $item->rent_days);
+            // $insuranceTotal = $cartItems->where('type', 'rent')->sum(fn($item) => $item->product->insurance_amount ?? 0);
             $saleTotal = $cartItems->where('type', 'sale')->sum(fn($item) => $item->quantity * $item->unit_price);
             $grandTotal = $rentTotal + $saleTotal;
 
@@ -58,7 +56,6 @@ class CheckoutService
                 ->where('status', 'accepted')
                 ->delete();
 
-            // 4. مسح السلة بعد نجاح الدفع وتوزيع الأرباح
             Cart::where('user_id', $userId)->delete();
 
             return $transactionId;
@@ -69,7 +66,6 @@ class CheckoutService
     {
         $productItemIds = $rentItems->pluck('product_item_id')->toArray();
 
-        // 🔐 قفل القطع العينية لمنع حجزها من شخصين في نفس اللحظة
         $lockedItems = ProductItem::whereIn('id', $productItemIds)->lockForUpdate()->get();
         foreach ($lockedItems as $lockedItem) {
             if ($lockedItem->status !== 'active') {
@@ -78,11 +74,14 @@ class CheckoutService
         }
 
         $totalRentPrice = $rentItems->sum(fn($item) => $item->unit_price * $item->rent_days);
+        $totalInsurance = $rentItems->sum(fn($item) => $item->product->insurance_amount ?? 0);
 
         $rental = Rental::create([
             'renter_id'      => $userId,
             'transaction_id' => $transactionId,
             'total_price'    => $totalRentPrice,
+            // 'total_insurance'=> $totalInsurance,
+            // 'insurance_status'=> 'held',
             'status'         => 'active',
             'receive_governorate' => $receiveGov,
             'receive_office'      => $receiveOffice
@@ -108,7 +107,6 @@ class CheckoutService
 
         $this->recordCommission($rental->id, null, $totalRentPrice, 'rental');
         
-        // 💰 توزيع الأرباح الصافية على أصحاب الآلات (المؤجرين)
         $this->distributeEarningsToSellers($rentItems, 'rent', $rental->id);
     }
 
@@ -116,7 +114,6 @@ class CheckoutService
     {
         $productIds = $saleItems->pluck('product_id')->unique()->toArray();
 
-        // 🔐 قفل المنتجات لمنع تضارب المخزون
         $lockedProducts = Product::whereIn('id', $productIds)->lockForUpdate()->get();
         foreach ($lockedProducts as $lockedProduct) {
             $requestedQuantity = $saleItems->where('product_id', $lockedProduct->id)->sum('quantity');
@@ -157,7 +154,6 @@ class CheckoutService
 
         $this->recordCommission(null, $order->id, $totalSalePrice, 'sale');
         
-        // 💰 توزيع الأرباح الصافية على البائعين
         $this->distributeEarningsToSellers($saleItems, 'sale', $order->id);
     }
 
@@ -172,9 +168,7 @@ class CheckoutService
         ]);
     }
 
-    /**
-     * دالة مساعدة لتجميع وتوزيع الأرباح الصافية على أصحاب المنتجات وإرسال الإشعارات
-     */
+    
     private function distributeEarningsToSellers($items, string $type, int $modelId): void
     {
         $sellerEarnings = [];
@@ -195,14 +189,11 @@ class CheckoutService
         }
 
         foreach ($sellerEarnings as $sellerId => $netAmount) {
-            // جلب البائع
             $seller = User::find($sellerId);
             
             if ($seller) {
-                // 1. زيادة الرصيد
                 $seller->increment('balance', $netAmount);
                 
-                // 2. 🔔 إرسال الإشعار اللحظي لقاعدة بيانات البائع
                 if ($type === 'sale') {
                     $seller->notify(new NewSaleNotification($modelId, $netAmount));
                 } elseif ($type === 'rent') {

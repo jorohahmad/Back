@@ -20,12 +20,10 @@ class DashboardController extends Controller
     {
         $this->dashboardService = $dashboardService;
     }
-    // خطوط بيانية ارادات الايجارات و المبيعات و العمولة %2
 
     public function getRevenueChart()
     {
         try {
-            // نجلب بيانات آخر 7 أيام (يمكنك جعل الرقم ديناميكياً يرسله الفرونت إند لاحقاً)
             $data = $this->dashboardService->getRevenueChartData(7);
 
             return response()->json([
@@ -45,14 +43,12 @@ class DashboardController extends Controller
     public function getStats()
     {
         try {
-            // 1. تهيئة فترات الأسبوع (الحالي والماضي)
             $startOfThisWeek = Carbon::now()->startOfWeek();
             $endOfThisWeek   = Carbon::now()->endOfWeek();
 
             $startOfLastWeek = Carbon::now()->subWeek()->startOfWeek();
             $endOfLastWeek   = Carbon::now()->subWeek()->endOfWeek();
 
-            // 2. تهيئة فترات الشهر (الحالي والماضي)
             $startOfThisMonth = Carbon::now()->startOfMonth();
             $endOfThisMonth   = Carbon::now()->endOfMonth();
 
@@ -78,15 +74,13 @@ class DashboardController extends Controller
             $lastMonthRentals = Rental::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->count();
 
             // ==========================================
-            // 🌟 إحصائيات صافي الأرباح (جمع العمولات)
+            //  إحصائيات صافي الأرباح (جمع العمولات)
             // ==========================================
-            // استخدمنا (float) لضمان تحويل القيمة الراجعة من قاعدة البيانات إلى رقم عشري حقيقي في الـ JSON
             $thisWeekEarnings  = (float) PlatformEarning::whereBetween('created_at', [$startOfThisWeek, $endOfThisWeek])->sum('commission_amount');
             $lastWeekEarnings  = (float) PlatformEarning::whereBetween('created_at', [$startOfLastWeek, $endOfLastWeek])->sum('commission_amount');
 
             $thisMonthEarnings = (float) PlatformEarning::whereBetween('created_at', [$startOfThisMonth, $endOfThisMonth])->sum('commission_amount');
             $lastMonthEarnings = (float) PlatformEarning::whereBetween('created_at', [$startOfLastMonth, $endOfLastMonth])->sum('commission_amount');
-            // 3. بناء الاستجابة المنظمة مع حساب نسب النمو
             return response()->json([
                 'status' => 'success',
                 'data'   => [
@@ -116,7 +110,6 @@ class DashboardController extends Controller
                             'percentage' => $this->calculateGrowthPercentage($thisMonthRentals, $lastMonthRentals),
                         ],
                     ],
-                    // 🌟 الحزمة المالية الجديدة للفرونت إند
                     'earnings' => [
                         'title' => 'earnings',
                         'weekly' => [
@@ -144,11 +137,9 @@ class DashboardController extends Controller
     private function calculateGrowthPercentage(float $current, float $previous): float
     {
         if ($previous == 0) {
-            // إذا كانت الفترة السابقة صفر والحالية أكبر من صفر فالنمو 100%، وإلا فهو 0%
             return $current > 0 ? 100.0 : 0.0;
         }
 
-        // المعادلة الحسابية للنمو وتقريب الناتج لخانين بعد الفاصلة
         return round((($current - $previous) / $previous) * 100, 2);
     }
 
@@ -159,7 +150,6 @@ class DashboardController extends Controller
     public function getSupplyDemandRatio()
     {
         try {
-            // 1. تحديد الفترات الزمنية
             $startOfWeek  = Carbon::now()->startOfWeek(Carbon::MONDAY);
             $endOfWeek    = Carbon::now()->endOfWeek(Carbon::SUNDAY);
 
@@ -169,7 +159,6 @@ class DashboardController extends Controller
             // ==========================================
             // 2. حساب العرض (Supply)
             // ==========================================
-            // استعلام أساسي للمنتجات المعتمدة
             $activeProductsQuery = Product::where('is_active', true)->where('delated', false);
 
             $overallSupply = (clone $activeProductsQuery)->count();
@@ -179,26 +168,20 @@ class DashboardController extends Controller
             // ==========================================
             // 3. حساب الطلب (Demand)
             // ==========================================
-            // الطلبات (Orders)
             $completedOrdersQuery = Order::where('status', 'completed');
             $overallOrders = (clone $completedOrdersQuery)->count();
             $weeklyOrders  = (clone $completedOrdersQuery)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
             $monthlyOrders = (clone $completedOrdersQuery)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
 
-            // الإيجارات (Rentals)
             $activeRentalsQuery = Rental::whereIn('status', ['active', 'completed']);
             $overallRentals = (clone $activeRentalsQuery)->count();
             $weeklyRentals  = (clone $activeRentalsQuery)->whereBetween('created_at', [$startOfWeek, $endOfWeek])->count();
             $monthlyRentals = (clone $activeRentalsQuery)->whereBetween('created_at', [$startOfMonth, $endOfMonth])->count();
 
-            // إجمالي الطلب لكل فترة
             $overallDemand = $overallOrders + $overallRentals;
             $weeklyDemand  = $weeklyOrders + $weeklyRentals;
             $monthlyDemand = $monthlyOrders + $monthlyRentals;
 
-            // ==========================================
-            // 4. بناء الاستجابة المنظمة
-            // ==========================================
             return response()->json([
                 'status' => 'success',
                 'data'   => [
@@ -230,9 +213,7 @@ class DashboardController extends Controller
             ], 500);
         }
     }
-    /**
-     * دالة مساعدة لحساب النسبة المئوية ومنع خطأ القسمة على صفر
-     */
+
     private function calculateRatio(int $demand, int $supply): float
     {
         if ($supply > 0) {
@@ -240,22 +221,17 @@ class DashboardController extends Controller
         }
         return 0.0;
     }
-    /**
-     * إرجاع ملخص الأداء اليومي للأسبوع الحالي بناءً على حجم المعاملات والعمولات
-     */
+
     public function getWeeklyPerformance()
     {
         try {
-            // 1. تحديد بداية ونهاية الأسبوع (يبدأ يوم الإثنين وينتهي يوم الأحد)
             $startOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY);
             $endOfWeek   = Carbon::now()->endOfWeek(Carbon::SUNDAY);
-
-            // 2. جلب إجمالي المعاملات والعمولات مجمعة حسب اليوم
             $earnings = PlatformEarning::whereBetween('created_at', [$startOfWeek, $endOfWeek])
                 ->select(
                     DB::raw('DATE(created_at) as date'),
                     DB::raw('SUM(transaction_amount) as total_amount'),
-                    DB::raw('SUM(commission_amount) as total_commission') // 👈 إضافة حقل العمولة هنا
+                    DB::raw('SUM(commission_amount) as total_commission')
                 )
                 ->groupBy('date')
                 ->get()
@@ -264,17 +240,14 @@ class DashboardController extends Controller
             $weeklyData = [];
             $maxAmount = 0;
 
-            // 3. بناء هيكل الأيام السبعة (من الإثنين إلى الأحد)
             for ($i = 0; $i < 7; $i++) {
                 $currentDate = $startOfWeek->copy()->addDays($i);
                 $dateString  = $currentDate->format('Y-m-d');
-                $dayName     = $currentDate->format('D'); // تعيد Mon, Tue, Wed...
+                $dayName     = $currentDate->format('D'); 
 
-                // جلب قيمة المعاملات والعمولات لهذا اليوم (أو صفر إذا لم تكن موجودة)
                 $amount     = $earnings->has($dateString) ? (float) $earnings->get($dateString)->total_amount : 0.0;
                 $commission = $earnings->has($dateString) ? (float) $earnings->get($dateString)->total_commission : 0.0; // 👈 استخراج العمولة
 
-                // تحديث أعلى قيمة في الأسبوع لاعتمادها في حساب القلوب
                 if ($amount > $maxAmount) {
                     $maxAmount = $amount;
                 }
@@ -283,25 +256,21 @@ class DashboardController extends Controller
                     'date'              => $dateString,
                     'day'          => $dayName,
                     'revenue1'            => $amount,
-                    'commission_revenue1' => $commission, // 👈 إضافتها للمصفوفة
+                    'commission_revenue1' => $commission, 
                 ];
             }
 
-            // 4. حساب عدد القلوب (من 0 إلى 10) وتنسيق الأرقام
             foreach ($weeklyData as &$day) {
                 if ($maxAmount > 0) {
-                    // المعادلة: (قيمة اليوم / أعلى قيمة) * 10
                     $day['activeDotsCount'] = (int) round(($day['revenue1'] / $maxAmount) * 10);
                 } else {
                     $day['activeDotsCount'] = 0;
                 }
 
-                // إضافة حقول مهيأة للقراءة للفرونت إند
                 $day['revenue']     = $this->formatAmountNumber($day['revenue1']);
-                $day['commission'] = $this->formatAmountNumber($day['commission_revenue1']); // 👈 تنسيق العمولة أيضاً
+                $day['commission'] = $this->formatAmountNumber($day['commission_revenue1']);
             }
 
-            // 5. إرجاع الاستجابة
             return response()->json([
                 'status' => 'success',
                 'data'   => [
@@ -318,9 +287,7 @@ class DashboardController extends Controller
         }
     }
 
-    /**
-     * دالة مساعدة لتنسيق المبالغ المالية
-     */
+
     private function formatAmountNumber(float $number): string
     {
         if ($number >= 1000) {
@@ -330,7 +297,6 @@ class DashboardController extends Controller
     }
 
     
-    // مخطط الدونات توزيع عمليات البيع و الاجار 
 
     public function getTransactionTypes()
     {
@@ -352,7 +318,6 @@ class DashboardController extends Controller
         }
     }
 
-        // يطاقات الارقام السريعة "متوسط مده الايجار و اجمالي القطغ المؤجرة حاليا"و
 
         public function getQuickStats()
     {
@@ -375,11 +340,9 @@ class DashboardController extends Controller
     }
 
     
-    // الرسم البياني الشريطي (الاقسام الاكثر مبيعا و الاقسام الاكثر تأجيرا)
     public function getTopMachines(Request $request)
     {
         try {
-            // استقبال الـ type من الفرونت إند (?type=sale أو ?type=rent)
             $type = $request->query('type', 'sale');
 
             $data = $this->dashboardService->getTopMachinesData($type, 3);

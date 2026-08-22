@@ -50,7 +50,6 @@ class adminController extends Controller
             'email' => 'required|email',
             'password' => 'required|string'
         ]);
-        // اذا الايميل والباسورد موجودين في قاعدة البيانات
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'message' => 'Invalid email or password',
@@ -79,16 +78,12 @@ class adminController extends Controller
             'key'   => 'required'
         ]);
         $user = User::where('email', $request->email)->firstOrFail();
-        // التحقق من صحة الكود (OTP)
         if ($user->key != $request->key) {
-            // 👈 نكتفي بإرجاع رسالة خطأ واضحة دون المساس بقاعدة البيانات
             return response()->json([
                 'message' => 'الكود الذي أدخلته غير صحيح. يرجى التأكد والمحاولة مرة أخرى.'
             ], 401);
         }
-        // ---------------------------------------------------------
-        // إذا وصل الكود إلى هنا، فهذا يعني أن الـ OTP صحيح 100%
-        // الآن نقوم بتصفير الكود (لحمايته من إعادة الاستخدام) وتوليد التوكن
+
         $user->update(['key' => null]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
@@ -139,8 +134,6 @@ class adminController extends Controller
     public function approveUser(Request $request)
     {
         $user = User::findOrFail($request->id);
-
-        // active => 1
         $user->active = '1';
         $user->save();
         $user->notify(new AccountApprovedNotification());
@@ -149,8 +142,6 @@ class adminController extends Controller
     public function approveAdmin(Request $request)
     {
         $user = User::findOrFail($request->id);
-
-        // active => 1
         $user->active = '1';
         $user->save();
         Mail::to($user->email)->send(new approvedUserMail($user));
@@ -161,8 +152,6 @@ class adminController extends Controller
     public function RejectUser(Request $request)
     {
         $user = User::findOrFail($request->id);
-
-        //delete
         $user->is_verified = false;
         $user->save();
         $user->notify(new AccountRejectedNotification());
@@ -171,20 +160,11 @@ class adminController extends Controller
     public function RejectAdmin(Request $request)
     {
         $user = User::findOrFail($request->id);
-
-        //delete
         Mail::to($user->email)->send(new rejectedUserMail($user));
 
         $user->delete();
         return response()->json('Reject Admin', 200);
     }
-
-
-
-
-
-
-
 
 
 
@@ -212,7 +192,6 @@ class adminController extends Controller
         $request->validate([
             'imagePersonal' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
-        // حتى لا يمتلئ السيرفر بآلاف الصور المهملة بمرور الوقت
         if ($user->imagePersonal) {
             Storage::disk('public')->delete($user->imagePersonal);
         }

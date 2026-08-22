@@ -14,13 +14,11 @@ class PriceOffer extends Model
         'status',
     ];
 
-    // للحصول على المشتري الذي قدم العرض
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    // للحصول على الآلة المرتبطة بهذا العرض
     public function product()
     {
         return $this->belongsTo(Product::class);

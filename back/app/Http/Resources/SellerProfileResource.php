@@ -15,7 +15,7 @@ class SellerProfileResource extends JsonResource
    public function toArray(Request $request): array
     {
         return [
-            'seller_info' => new UsersResource($this), // معلومات البائع مع التقييم
+            'seller_info' => new UsersResource($this), 
             'products' => ProductResource::collection($this->products),
         ];
     }

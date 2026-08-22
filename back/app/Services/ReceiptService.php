@@ -8,9 +8,7 @@ use Exception;
 
 class ReceiptService
 {
-    /**
-     * جلب تفاصيل الإيصال الموحد
-     */
+   
     public function getReceiptDetails(string $transactionId, int $userId): array
     {
         $order = Order::with('orderItems.product')
@@ -30,9 +28,7 @@ class ReceiptService
         return $this->buildReceiptArray($transactionId, $order, $rental);
     }
 
-    /**
-     * بناء الهيكل النهائي للإيصال
-     */
+   
     private function buildReceiptArray(string $transactionId, ?Order $order, ?Rental $rental): array
     {
         $orderTotal  = $order ? $order->total_price : 0;
@@ -44,9 +40,8 @@ class ReceiptService
         if ($expectedArrival && $transferStatus === 'onWay') {
             $target = \Carbon\Carbon::parse($expectedArrival);
             if ($target->isFuture()) {
-                $diff = now()->diff($target); // حساب الفرق بين الآن ووقت الوصول
-                $hours = ($diff->days * 24) + $diff->h; // جمع الأيام إن وجدت مع الساعات
-                // تنسيق الوقت إلى HH:mm:ss
+                $diff = now()->diff($target); 
+                $hours = ($diff->days * 24) + $diff->h;
                 $remainingTime = sprintf('%02d:%02d:%02d', $hours, $diff->i, $diff->s); 
             }
         }
@@ -61,16 +56,13 @@ class ReceiptService
         ];
     }
 
-    /**
-     * تنسيق مصفوفة المشتريات
-     */
+    
     private function formatSales(?Order $order): ?array
     {
         if (!$order) {
             return null;
         }
 
-        // 👈 سطر الحماية واستخدام اسم العلاقة الصحيح حسب الموديل: orderItems
         $items = $order->orderItems ?? collect([]);
 
         return [
@@ -89,16 +81,13 @@ class ReceiptService
         ];
     }
 
-    /**
-     * تنسيق مصفوفة الإيجارات
-     */
+    
     private function formatRentals(?Rental $rental): ?array
     {
         if (!$rental) {
             return null;
         }
 
-        // 👈 سطر الحماية واستخدام اسم العلاقة الصحيح حسب الموديل: rentalItems
         $items = $rental->rentalItems ?? collect([]);
 
         return [
@@ -106,7 +95,7 @@ class ReceiptService
             'total_price' => $rental->total_price,
             'items'       => $items->map(function ($item) {
                 return [
-                    // الانتباه هنا أيضاً لسلسلة العلاقات لتجنب أخطاء null أخرى
+                    'item_id'       => $item->id,
                     'product_name' => $item->productItem->product->title ?? 'عنصر غير معروف',
                     'product_image' => $item->productItem->product->image1 ? asset('storage/' . $item->productItem->product->image1) : null,
                     'user_name'    => $item->lessor->name ?? 'مستخدم غير معروف',
@@ -122,26 +111,22 @@ class ReceiptService
 
     public function getAllUserReceipts(int $userId)
     {
-        // 1. جلب المشتريات (تعديل item إلى orderItems لتطابق الموديل)
         $orders = Order::with('orderItems.product')
             ->where('buyer_id', $userId)
             ->whereNotNull('transaction_id')
             ->get()
             ->keyBy('transaction_id');
 
-        // 2. جلب الإيجارات (تعديل item إلى rentalItems لتطابق الموديل)
         $rentals = Rental::with('rentalItems.productItem.product')
             ->where('renter_id', $userId)
             ->whereNotNull('transaction_id')
             ->get()
             ->keyBy('transaction_id');
 
-        // 3. دمج أرقام المعاملات بدون تكرار
         $transactionIds = $orders->keys()->merge($rentals->keys())->unique();
 
         $receipts = [];
 
-        // 4. بناء هيكل كل إيصال باستخدام الدالة المساعدة الموجودة مسبقاً! (إعادة استخدام الكود DRY)
         foreach ($transactionIds as $transactionId) {
             $order  = $orders->get($transactionId);
             $rental = $rentals->get($transactionId);
@@ -149,7 +134,6 @@ class ReceiptService
             $receipts[] = $this->buildReceiptArray($transactionId, $order, $rental);
         }
 
-        // 5. ترتيب الإيصالات من الأحدث إلى الأقدم بناءً على حقل date
         usort($receipts, function ($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
@@ -159,7 +143,6 @@ class ReceiptService
 
     public function getAllReceiptsForAdmin()
     {
-        // 1. جلب المشتريات والإيجارات مع بيانات صاحب الفاتورة فقط (أسرع وأخف على الداتابيز)
         $orders =Order::with('buyer')
             ->whereNotNull('transaction_id')
             ->get()
@@ -177,7 +160,6 @@ class ReceiptService
             $order  = $orders->get($transactionId);
             $rental = $rentals->get($transactionId);
 
-            // 2. استخراج المالك، التاريخ، والحالة
             $owner = null;
             $date = null;
             $transferStatus = 'pending';
@@ -186,16 +168,19 @@ class ReceiptService
             if ($order) {
                 $owner = $order->buyer;
                 $date = $order->created_at;
+                $g=$order->receive_governorate;
+                $o=$order->receive_office;
                 $transferStatus = $order->transfer_status;
                 $expectedArrival = $order->expected_arrival_at;
             } elseif ($rental) {
                 $owner = $rental->renter;
                 $date = $rental->created_at;
+                $g=$rental->receive_governorate;
+                $o=$rental->receive_office;
                 $transferStatus = $rental->transfer_status;
                 $expectedArrival = $rental->expected_arrival_at;
             }
 
-            // 3. حساب الوقت المتبقي بدقة
             $remainingTime = '00:00:00';
             if ($expectedArrival && $transferStatus === 'onWay') {
                 $target = \Carbon\Carbon::parse($expectedArrival);
@@ -206,13 +191,14 @@ class ReceiptService
                 }
             }
 
-            // 4. بناء الهيكل المطابق للصورة تماماً
             $receipts[] = [
                 'transaction_id'  => $transactionId,
                 'date'            => $date ? $date->format('Y-m-d H:i:s') : null,
                 'grand_total'     => (float) (($order ? $order->total_price : 0) + ($rental ? $rental->total_price : 0)),
                 'remaining_time'  => $remainingTime,
                 'transfer_status' => $transferStatus,
+                'g'=>$g ?? null,
+                'o'=>$o ?? null,
                 'invoice_owner'   => $owner ? [
                     'id'    => $owner->id,
                     'name'  => $owner->name,
@@ -223,11 +209,22 @@ class ReceiptService
             ];
         }
 
-        // 5. الترتيب من الأحدث إلى الأقدم
         usort($receipts, function ($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
 
         return $receipts;
+    }
+
+    public function getAdminReceiptDetails(string $transactionId): array
+    {
+        $order = Order::with('orderItems.product.owner')->where('transaction_id', $transactionId)->first();
+        $rental = Rental::with('rentalItems.productItem.product', 'rentalItems.lessor')->where('transaction_id', $transactionId)->first();
+
+        if (!$order && !$rental) {
+            throw new Exception('الفاتورة غير موجودة.', 404);
+        }
+
+        return $this->buildReceiptArray($transactionId, $order, $rental);
     }
 }

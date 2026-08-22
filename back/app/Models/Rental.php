@@ -18,6 +18,8 @@ class Rental extends Model
         'transaction_id',
         'transfer_status',
         'expected_arrival_at',
+        'total_insurance',
+        'insurance_status',
         'receive_governorate',
         'receive_office'
     ];
@@ -34,7 +36,6 @@ class Rental extends Model
     // {
     //     return $this->belongsTo(ProductItem::class, 'product_item_id');
     // }
-    // داخل كلاس Rental
     public function platformEarning()
     {
         return $this->hasOne(PlatformEarning::class, 'rental_id');

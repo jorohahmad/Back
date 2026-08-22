@@ -27,13 +27,9 @@ class ClearAbandonedCarts extends Command
      */
     public function handle()
     {
-        // 1. تحديد الوقت المرجعي (قبل 24 ساعة من الآن)
-        $timeLimit = Carbon::now()->subHours(24);
-
-        // 2. البحث عن وحذف جميع العناصر في السلة التي تم إنشاؤها قبل هذا الوقت
+        $timeLimit = Carbon::now()->subMinutes(5);
         $deletedCount = Cart::where('created_at', '<', $timeLimit)->delete();
 
-        // 3. طباعة رسالة توضح نتيجة العملية في السيرفر
         if ($deletedCount > 0) {
             $this->info("Successfully cleared {$deletedCount} abandoned cart item(s). The reserved items are now available again.");
         } else {

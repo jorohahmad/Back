@@ -30,7 +30,6 @@ class CartService
         if (!$product->is_for_sale) {
             throw new Exception("هذا المنتج غير متاح للبيع.");
         }
-        // البحث عن عرض سعر مقبول مسبقاً من قبل المستخدم لهذا المنتج
         $acceptedOffer = PriceOffer::where('user_id', $userId)
             ->where('product_id', $product->id)
             ->where('type', 'sale')
@@ -47,19 +46,16 @@ class CartService
         $currentQuantity = $existingCartItem ? $existingCartItem->quantity : 0;
         $totalRequestedQuantity = $currentQuantity + $quantity;
 
-        // التحقق من كفاية المخزون
         if ($product->stock < $totalRequestedQuantity) {
             throw new Exception("الكمية المطلوبة غير متوفرة. المتاح حالياً إضافة: " . ($product->stock - $currentQuantity));
         }
 
         if ($existingCartItem) {
-            // تحديث الكمية إذا كان موجوداً
             $existingCartItem->update([
                 'quantity' => $totalRequestedQuantity,
                 'unit_price' => $finalPrice,
                 ]);
         } else {
-            // إنشاء سطر جديد في السلة
             Cart::create([
                 'user_id'    => $userId,
                 'product_id' => $product->id,
@@ -90,10 +86,8 @@ class CartService
         $end = Carbon::parse($endDate);
         $rentDays = $start->diffInDays($end) ?: 1;
 
-        // استخراج القطع المحجوزة مسبقاً في سلات المستخدمين الآخرين لمنع اختيارها
         $itemsAlreadyInCarts = Cart::whereNotNull('product_item_id')->pluck('product_item_id')->toArray();
 
-        // جلب القطع العينية النشطة والمتاحة
         $availableItems = ProductItem::where('product_id', $product->id)
             ->where('status', 'active')
             ->whereNotIn('id', $itemsAlreadyInCarts)
@@ -104,16 +98,15 @@ class CartService
             throw new Exception("لا يوجد قطع كافية متاحة للإيجار حالياً. المتاح: " . $availableItems->count());
         }
 
-        // تجهيز مصفوفة لإنشاء عدة أسطر بضربة واحدة (Bulk Insert)
         $cartData = [];
         foreach ($availableItems as $item) {
             $cartData[] = [
                 'user_id'         => $userId,
                 'product_id'      => $product->id,
-                'product_item_id' => $item->id, // ربط القطعة العينية
+                'product_item_id' => $item->id, 
                 'type'            => 'rent',
-                'quantity'        => 1, // الكمية في سطر الإيجار دائماً 1
-                'unit_price'      => $finalPrice, // افترضنا وجود حقل rent_price
+                'quantity'        => 1, 
+                'unit_price'      => $finalPrice,
                 'rent_start_date' => $start->toDateString(),
                 'rent_end_date'   => $end->toDateString(),
                 'rent_days'       => $rentDays,
@@ -164,19 +157,14 @@ class CartService
     private function formatSingleGroup(Collection $group): array
     {
         $firstItem     = $group->first();
-        // 🎯 التعديل الجذري هنا: 
-        // إذا كان بيع نجمع الأرقام، وإذا كان إيجار نعدّ الأسطر فقط لنتجاهل أي أرقام خاطئة في الداتا بيز!
         $totalQuantity = $firstItem->type === 'sale'
             ? $group->sum('quantity')
             : $group->count();
 
-        // 👇 تحديد "العدد المتاح" بذكاء بناءً على نوع العملية
         if ($firstItem->type === 'sale') {
-            // في حالة الشراء: العدد المتاح هو المخزون
             $itemsCount = $firstItem->product?->stock ?? 0;
-            $availableRentItemIds = []; // لا يلزم أرقام قطع في المبيعات
+            $availableRentItemIds = []; 
         } else {
-            // في حالة الإيجار: العدد المتاح هو القطع العينية النشطة
             $activeItems = $firstItem->product ? $firstItem->product->items->where('status', 'active') : collect([]);
             $itemsCount  = $activeItems->count();
             $availableRentItemIds = $activeItems->pluck('id')->toArray();
@@ -208,7 +196,6 @@ class CartService
     //update cart
     public function updateItemQuantity(int $userId, array $cartIds, string $action, int $steps = 1): void
     {
-        // 1. أخذ السطر الأول كمرجع لمعرفة نوع المنتج
         $referenceCartId = $cartIds[0];
         $cartItem = Cart::where('user_id', $userId)->findOrFail($referenceCartId);
         $product = Product::findOrFail($cartItem->product_id);
@@ -218,15 +205,12 @@ class CartService
         // ==========================================
         if ($cartItem->type === 'sale') {
             if ($action === 'increase') {
-                // التحقق من أن المخزون يكفي للكمية الحالية + عدد الضغطات الجديدة
                 if ($product->stock < ($cartItem->quantity + $steps)) {
                     throw new Exception("عذراً، الكمية المطلوبة غير متوفرة. المتاح في المخزن: " . $product->stock);
                 }
 
-                // الزيادة بمقدار الخطوات
                 $cartItem->increment('quantity', $steps);
             } elseif ($action === 'decrease') {
-                // التأكد من أن النقصان لن يصل للصفر أو رقم سالب
                 if (($cartItem->quantity - $steps) >= 1) {
                     $cartItem->decrement('quantity', $steps);
                 } else {
@@ -239,33 +223,28 @@ class CartService
         // ==========================================
         elseif ($cartItem->type === 'rent') {
             if ($action === 'increase') {
-                // البحث عن قطع أخرى متاحة للإيجار دفعة واحدة بعدد الـ steps
                 $itemsAlreadyInCarts = Cart::whereNotNull('product_item_id')->pluck('product_item_id')->toArray();
 
                 $availableItems = ProductItem::where('product_id', $product->id)
                     ->where('status', 'active')
                     ->whereNotIn('id', $itemsAlreadyInCarts)
-                    ->limit($steps) // جلب قطع بعدد الضغطات
+                    ->limit($steps) 
                     ->get();
 
                 if ($availableItems->count() < $steps) {
                     throw new Exception("عذراً، لا يوجد قطع إضافية كافية للإيجار. المتاح للإضافة: " . $availableItems->count());
                 }
 
-                // التكرار لنسخ السطر المرجعي وإنشاء أسطر جديدة حسب القطع المتاحة
                 foreach ($availableItems as $item) {
                     $newCartItem = $cartItem->replicate();
                     $newCartItem->product_item_id = $item->id;
-                    // 👈 أضف هذا السطر: إجبار الكمية على 1 لتنظيف أي بيانات قديمة في المخزن
                     $newCartItem->quantity = 1;
                     $newCartItem->created_at = now();
                     $newCartItem->updated_at = now();
                     $newCartItem->save();
                 }
             } elseif ($action === 'decrease') {
-                // التأكد من أن المستخدم لا يحاول حذف كل شيء (يجب بقاء سطر واحد على الأقل)
                 if (count($cartIds) >= $steps) {
-                    // نقتطع آخر IDs من المصفوفة بمقدار عدد الضغطات لنحذفها
                     $idsToDelete = array_slice($cartIds, -$steps);
                     Cart::whereIn('id', $idsToDelete)->where('user_id', $userId)->delete();
                 } else {

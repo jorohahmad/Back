@@ -32,6 +32,6 @@ class TransferStatusUpdated implements ShouldBroadcastNow
 
     public function broadcastAs()
     {
-        return 'transfer.updated'; // الاسم الذي سيستمع له تطبيق Flutter
+        return 'transfer.updated'; 
     }
 }

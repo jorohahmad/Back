@@ -29,21 +29,17 @@ class ProductService
             ];
             for ($i = 1; $i <= 3; $i++) {
                 if (isset($data['image' . $i])) {
-                    // 1. حفظ سريع جداً في المجلد المؤقت
                     $tempPath = saveTempFile($data['image' . $i]);
 
                     $tempUploads['image' . $i] = $tempPath;
-                    // 2. تعيين قيمة مبدئية لكي لا يبقى الحقل فارغاً
                     $product->{'image' . $i} = 'processing.png';
                 }
             }
             if (isset($data['audio']) && $data['audio']) {
-                // حفظ سريع في مجلد مؤقت
                 $mediaData['audio_temp'] = saveFile($data['audio'], 'temp_media');
             }
 
             if (isset($data['video']) && $data['video']) {
-                // حفظ سريع في مجلد مؤقت
                 $mediaData['video_temp'] = saveFile($data['video'], 'temp_media');
             }
 
@@ -54,6 +50,11 @@ class ProductService
             $product->is_active = $data['is_active'] ?? false;
             $product->governorate = $data['governorate'];
             $product->office = $data['office'];
+            if ($product->is_for_rent) {
+                $product->insurance_amount = $product->rent_price_daily * 10;
+            } else {
+                $product->insurance_amount = 0;
+            }
             $product->save();
 
             foreach ($tempUploads as $columnName => $tempPath) {
@@ -77,7 +78,6 @@ class ProductService
                     ];
                 }
 
-                // إدخال جميع القطع في قاعدة البيانات باستعلام واحد فقط (Bulk Insert)
                 \App\Models\ProductItem::insert($itemsData);
             }
             return $product;

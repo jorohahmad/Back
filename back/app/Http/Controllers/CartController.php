@@ -154,7 +154,7 @@ class CartController extends Controller
 
             $this->cartService->updateItemQuantity(
                 $userId,
-                $request->validated('cart_ids'), // استخدام validated() لضمان الأمان
+                $request->validated('cart_ids'), 
                 $request->validated('action'),
                 $steps
             );
@@ -175,7 +175,6 @@ class CartController extends Controller
         try {
             $userId = Auth::user()->id;
 
-            // تمرير المهمة للخدمة
             $receipt = $this->receiptService->getReceiptDetails($transactionId, $userId);
 
             return response()->json([
@@ -183,7 +182,6 @@ class CartController extends Controller
                 'data'   => $receipt
             ], 200);
         } catch (Exception $e) {
-            // تحديد كود الخطأ (404 إذا لم يتم العثور عليه، أو 500 للأخطاء العامة)
             $statusCode = $e->getCode() === 404 ? 404 : 500;
 
             return response()->json([
@@ -198,7 +196,6 @@ class CartController extends Controller
         try {
             $userId = Auth::user()->id;
 
-            // تمرير المهمة للخدمة لتتولى الاستعلام والترتيب
             $receipts = $this->receiptService->getAllUserReceipts($userId);
 
             return response()->json([

@@ -40,40 +40,33 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'balance' => 'double', // لضمان التعامل معه كرقم عشري
+            'balance' => 'double', 
         ];
     }
-    // ارجاع المنتجات التي يملكها المستخدم
     public function products()
     {
         return $this->hasMany(Product::class, 'owner_id');
     }
-    //ارجاع الطلبات التي كان فيها البائع
     public function sales()
     {
         return $this->hasMany(OrderItem::class, 'seller_id');
     }
-    //ارجاع الطلبات التي كان فيها المشتري
     public function purchases()
     {
         return $this->hasMany(Order::class, 'buyer_id');
     }
-    //  الإيجارات الصادرة (هو المؤجر/المالك)
     public function rentalsOut()
     {
         return $this->hasMany(RentalItem::class, 'lessor_id');
     }
-    // الإيجارات الواردة (هو المستأجر)
     public function rentalsIn()
     {
         return $this->hasMany(Rental::class, 'renter_id');
     }
-    // السلة
     public function cartItems()
     {
         return $this->hasMany(Cart::class);
     }
-    //الملاحظات للاادمن
     public function notices()
     {
         return $this->hasMany(Notice::class, 'user_id');

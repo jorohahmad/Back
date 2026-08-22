@@ -38,6 +38,7 @@ class ProductRentalResource extends JsonResource
             'governorate' => $this->governorate,
             'office'      => $this->office,
             'condition'   => $this->condition,
+            'insurance_amount' => $this->insurance_amount,
         ];
     }
 }

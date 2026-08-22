@@ -12,7 +12,6 @@ use App\Notifications\PriceOfferRejectedNotification;
 
 class PriceOfferController extends Controller
 {
-    // 1. المشتري يرسل عرض سعر
     public function sendOffer(Request $request)
     {
         $request->validate([
@@ -23,17 +22,14 @@ class PriceOfferController extends Controller
 
         $product = Product::findOrFail($request->product_id);
 
-        // التحقق أن الآلة تدعم التفاوض
         if (!$product->repricing) {
             return response()->json(['message' => __('messages.repricing_not_allowed')], 400);
         }
 
-        // منع المستخدم من التفاوض على آلته
         if ($product->owner_id === Auth::id()) {
             return response()->json(['message' => __('messages.cannot_offer_own_product')], 400);
         }
 
-        // منع إرسال أكثر من طلب معلق لنفس الآلة
         $existingOffer = PriceOffer::where('user_id', Auth::id())
             ->where('product_id', $product->id)
             ->where('status', 'pending')
@@ -51,7 +47,6 @@ class PriceOfferController extends Controller
             'status'         => 'pending'
         ]);
 
-        // إرسال إشعار لصاحب الآلة
         $product->owner->notify(new NewPriceOfferNotification($offer->id, $product->title, $request->proposed_price));
 
         return response()->json([
@@ -60,12 +55,10 @@ class PriceOfferController extends Controller
              ], 201);
     }
 
-    // 2. المالك يوافق على العرض
     public function acceptOffer($id)
     {
         $offer = PriceOffer::findOrFail($id);
 
-        // التحقق أن الشخص الذي يوافق هو فعلاً مالك الآلة
         if ($offer->product->owner_id !== Auth::id()) {
             return response()->json(['message' => __('messages.unauthorized_action')], 403);
         }
@@ -79,7 +72,6 @@ class PriceOfferController extends Controller
         return response()->json(['message' => __('messages.offer_accepted_successfully')]);
     }
 
-    // 3. المالك يرفض العرض
     public function rejectOffer($id)
     {
         $offer = PriceOffer::findOrFail($id);

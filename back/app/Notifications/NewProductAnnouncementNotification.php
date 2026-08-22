@@ -30,7 +30,7 @@ class NewProductAnnouncementNotification extends Notification implements ShouldQ
         return [
             'title_key'      => 'new_announcement_title',
             'body_key'       => 'new_announcement_body',
-            'product_name'   => $this->productTitle, // تمرير اسم المنتج
+            'product_name'   => $this->productTitle, 
             'product_id'     => $this->productId,
             'type'           => 'announcement',
         ];

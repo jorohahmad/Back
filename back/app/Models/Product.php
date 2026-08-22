@@ -15,6 +15,7 @@ class Product extends Model
         'image3',
         'audio',
         'video',
+        'insurance_amount',
         'governorate',
         'office',
         'owner_id',
@@ -28,21 +29,19 @@ class Product extends Model
         'stock',
         'delated'
     ];
-    // الحصول على صاحب الآلة
     public function owner()
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
-    // الحصول على العناصر المرتبطة بالآلة
     public function items()
     {
         return $this->hasMany(ProductItem::class,'product_id');
     }
     protected $casts = [
-        'sale_price' => 'double', // أو 'float' كلاهما سيفي بالغرض
-        'is_for_sale' => 'boolean', // يمكنك أيضاً التأكد من أن هذا الحقل يعود كـ true/false دائماً
-        'is_for_rent' => 'boolean', // يمكنك أيضاً التأكد من أن هذا الحقل يعود كـ true/false دائماً
-        'rent_price_daily' => 'double', // أو 'float' كلاهما سيفي بالغرض
+        'sale_price' => 'double',
+        'is_for_sale' => 'boolean', 
+        'is_for_rent' => 'boolean', 
+        'rent_price_daily' => 'double', 
         'announcement' => 'boolean',
         'repricing' => 'boolean',
         'is_active' => 'boolean',

@@ -32,26 +32,22 @@ class ProcessProductVideoAndAudioJob implements ShouldQueue
             return;
         }
         $updateFields = [];
-        // audio processing
         if ($this->mediaData['audio_temp']) {
             $tempAudioPath = $this->mediaData['audio_temp'];
             $finalAudioName = basename($tempAudioPath);
             $finalAudioPath = 'audioInst/' . $finalAudioName;
 
-            // نقل الملف من المجلد المؤقت إلى المجلد النهائي
             if (Storage::disk('public')->exists($tempAudioPath)) {
                 Storage::disk('public')->move($tempAudioPath, $finalAudioPath);
                 $updateFields['audio'] = $finalAudioPath;
             }
         }
 
-        // video processing
         if ($this->mediaData['video_temp']) {
             $tempVideoPath = $this->mediaData['video_temp'];
             $finalVideoName = basename($tempVideoPath);
             $finalVideoPath = 'videoInst/' . $finalVideoName;
 
-            // نقل الملف من المجلد المؤقت إلى المجلد النهائي
             if (Storage::disk('public')->exists($tempVideoPath)) {
                 Storage::disk('public')->move($tempVideoPath, $finalVideoPath);
                 $updateFields['video'] = $finalVideoPath;

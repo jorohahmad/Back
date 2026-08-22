@@ -109,7 +109,6 @@ class UserController extends Controller
         $isFavorited = count($result['attached']) > 0;
 
         return response()->json([
-            // 👈 لاحظ كيف نستخدم الترجمة مع العمليات الشرطية
             'message' => $isFavorited ? __('messages.added_to_favorites') : __('messages.removed_from_favorites'),
             'is_favorited' => $isFavorited
         ], 200);
@@ -254,7 +253,6 @@ class UserController extends Controller
         $request->validate([
             'email' => 'required|email|exists:users,email',
         ], [
-            // 👈 تخصيص رسالة الـ validation المترجمة
             'email.exists' => __('messages.email_not_registered')
         ]);
 
