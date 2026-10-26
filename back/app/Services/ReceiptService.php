@@ -213,6 +213,9 @@ class ReceiptService
                 'grand_total'     => (float) (($order ? $order->total_price : 0) + ($rental ? $rental->total_price : 0)),
                 'remaining_time'  => $remainingTime,
                 'transfer_status' => $transferStatus,
+                // مكان الاستلام (المحافظة والمكتب) من الطلب أو الإيجار
+                'receive_governorate' => $order?->receive_governorate ?? $rental?->receive_governorate,
+                'receive_office'      => $order?->receive_office ?? $rental?->receive_office,
                 'invoice_owner'   => $owner ? [
                     'id'    => $owner->id,
                     'name'  => $owner->name,

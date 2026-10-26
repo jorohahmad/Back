@@ -30,7 +30,7 @@ class productAdmin extends JsonResource
             'isSale'=>$this->is_for_sale,
             'isRent'=>$this->is_for_rent,
             'salePrice'=>$this->sale_price,
-            'rentPrice'=>$this->rent_price,
+            'rentPrice'=>$this->rent_price_daily,
         ];
     }
 }

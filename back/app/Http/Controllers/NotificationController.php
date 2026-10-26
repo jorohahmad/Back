@@ -112,12 +112,7 @@ class NotificationController extends Controller
         $formattedNotifications = $notifications->map(function ($notification) {
             $data = $notification->data;
 
-            $replace = [];
-            if (isset($data['user_name'])) $replace['user_name'] = $data['user_name'];
-            if (isset($data['product_name'])) $replace['product_name'] = $data['product_name'];
-            if (isset($data['owner_name'])) $replace['owner_name'] = $data['owner_name'];
-            if (isset($data['buyer_name'])) $replace['buyer_name'] = $data['buyer_name'];
-            if (isset($data['transaction_id'])) $replace['transaction_id'] = $data['transaction_id'];
+            $replace = $this->translationParams($data);
 
             return [
                 'id'         => $notification->id,
@@ -160,10 +155,7 @@ class NotificationController extends Controller
         $formattedActivities = $activities->map(function ($notification) {
             $data = $notification->data;
             
-            $replace = [];
-            if (isset($data['admin_name'])) $replace['admin_name'] = $data['admin_name'];
-            if (isset($data['notice_title'])) $replace['notice_title'] = $data['notice_title'];
-            if (isset($data['notice_type'])) $replace['notice_type'] = $data['notice_type'];
+            $replace = $this->translationParams($data);
 
             return [
                 'id'         => $notification->id,
@@ -179,5 +171,12 @@ class NotificationController extends Controller
             'status' => 'success',
             'data'   => $formattedActivities
         ], 200);
+    }
+
+    // كل القيم النصية في بيانات الإشعار تُمرَّر للترجمة (مثل :admin_name و :notice_title)
+    // بدل تعدادها يدوياً، حتى لا تظهر أسماء المتغيرات في الرسالة عند نسيان أحدها
+    private function translationParams(array $data): array
+    {
+        return array_filter($data, fn($value) => is_scalar($value));
     }
 }
