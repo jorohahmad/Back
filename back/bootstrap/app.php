@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'active'=>CheckActive::class,
         ]);
         $middleware->append(\App\Http\Middleware\SetAppLanguage::class);
+        $middleware->api(append: [\App\Http\Middleware\DemoReadOnly::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -52,6 +52,7 @@ Route::post('admin/register' , [adminController::class,'register']);
 Route::post('admin/login1' , [adminController::class,'login1']);
 Route::post('admin/login2' , [adminController::class,'login2']);
 Route::post('admin/logout' , [adminController::class,'logout'])->middleware('auth:sanctum');
+Route::post('admin/demo-login' , [adminController::class,'demoLogin'])->middleware('throttle:30,1');
 Route::put('profile/update', [AdminController::class, 'updateInformation'])->middleware('auth:sanctum');
 Route::post('profile/update-image', [AdminController::class, 'updateImage'])->middleware('auth:sanctum');
 

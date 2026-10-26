@@ -19,14 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
+    'allowed_origins' => array_values(array_filter(array_merge([
         'https://musical-instruments-dzbd.onrender.com',
         'http://localhost:3000', // منفذ React أو Vue مثلاً
         'http://localhost:8000',
         'http://127.0.0.1:8000',
         'http://localhost:5173',                         // رابط سيرفرك المحلي (Vite)
-    ],
-    'allowed_origins_patterns' => [],
+    ], array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', '')))))), // رابط الداشبورد على Cloudflare مثلاً
+    // روابط المعاينة الخاصة بـ Cloudflare Pages مثل https://abc123.my-dashboard.pages.dev
+    'allowed_origins_patterns' => array_values(array_filter([env('CORS_ALLOWED_ORIGINS_PATTERN')])),
 
     'allowed_headers' => ['*'],
 

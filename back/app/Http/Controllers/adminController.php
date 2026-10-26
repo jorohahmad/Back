@@ -99,6 +99,31 @@ class adminController extends Controller
         ], 200);
     }
 
+    // دخول مباشر بالحساب التجريبي (بدون OTP) - يعمل فقط عند تفعيل DEMO_MODE
+    function demoLogin()
+    {
+        if (!config('demo.enabled')) {
+            return response()->json(['message' => 'Demo mode is disabled'], 404);
+        }
+
+        $user = User::where('email', config('demo.email'))->where('role', 'admin')->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'Demo account not found. Run: php artisan db:seed --class=DemoSeeder',
+            ], 404);
+        }
+
+        // حذف التوكنات القديمة للحساب التجريبي حتى لا يمتلئ الجدول
+        $user->tokens()->where('created_at', '<', now()->subDay())->delete();
+
+        $token = $user->createToken('demo_token')->plainTextToken;
+        return response()->json([
+            'message' => 'Login successful',
+            'user' => $user,
+            'token' => $token,
+        ], 200);
+    }
+
     // logout
     function logout(Request $request)
     {

@@ -9,3 +9,7 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 Schedule::command('rentals:check-expired')->daily();
 Schedule::command('carts:clear-abandoned')->hourly();
+// النسخة التجريبية: إعادة توليد البيانات الوهمية يومياً حتى تبقى إحصائيات "هذا الأسبوع" ممتلئة
+Schedule::command('db:seed', ['--class' => 'DemoSeeder', '--force' => true])
+    ->dailyAt('00:05')
+    ->when(fn() => config('demo.enabled'));

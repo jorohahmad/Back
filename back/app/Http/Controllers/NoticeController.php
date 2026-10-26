@@ -19,13 +19,7 @@ class NoticeController extends Controller
     // عرض كل الملاحظات التي تنطبق عليها الشروط المطلوبة
     public function index()
     {
-
-<<<<<<< HEAD
-        $userId = Auth::user()->id;
-        $user = User::findOrFail($userId);
-=======
         $user = Auth::user();
->>>>>>> 139cc81b7a0b54ed9fcdec31db6483e3b9e50ebe
 
         if (!$user->isAdmin()) {
             return response()->json([
@@ -33,18 +27,6 @@ class NoticeController extends Controller
             ], 403);
         }
 
-<<<<<<< HEAD
-    // 3. جلب البيانات
-    $notices = Notice::where(function ($query) use ($user) {
-        $query->where('type', '!=', 'personal')
-              ->orWhere(function ($q) use ($user) {
-                  $q->where('type', 'personal')
-                    ->where('user_id', $user->id);
-              });
-    })
-    ->orderBy('due_date', 'asc')
-    ->get();
-=======
         $notices = Notice::where(function ($quary) use ($user) {
             $quary->where('type', '!=', 'personal')
                 ->orWhere(function ($q) use ($user) {
@@ -59,13 +41,6 @@ class NoticeController extends Controller
             'data' => $notices
         ], 200);
     }
->>>>>>> 139cc81b7a0b54ed9fcdec31db6483e3b9e50ebe
-
-    return response()->json([
-        'status' => 'success',
-        'data' => $notices
-    ], 200);
-}
     public function store(StoreNoticeRequest $request): JsonResponse
     {
         $userId = Auth::user()->id;
